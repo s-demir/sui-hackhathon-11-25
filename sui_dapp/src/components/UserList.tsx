@@ -1,12 +1,12 @@
 import { useSuiClientQuery } from "@mysten/dapp-kit";
-import { Flex, Text, Card } from "@radix-ui/themes";
+import { Flex, Text, Card, Button } from "@radix-ui/themes";
 import { REGISTRY_ID } from "../constants";
 import { useState } from "react";
 
 export function UserList() {
   const [copiedUsername, setCopiedUsername] = useState<string | null>(null);
 
-  const { data, isLoading, error } = useSuiClientQuery(
+  const { data, isLoading, error, refetch } = useSuiClientQuery(
     "getObject",
     {
       id: REGISTRY_ID,
@@ -32,9 +32,20 @@ export function UserList() {
 
   return (
     <Flex direction="column" gap="3" style={{ padding: "20px", border: "1px solid var(--gray-a4)", borderRadius: "8px" }}>
-      <Text size="5" weight="bold">
-        👥 Kayıtlı Kullanıcılar
-      </Text>
+      <Flex justify="between" align="center">
+        <Text size="5" weight="bold">
+          👥 Kayıtlı Kullanıcılar
+        </Text>
+        <Button
+          onClick={() => refetch()}
+          size="2"
+          variant="soft"
+          disabled={isLoading}
+          style={{ cursor: isLoading ? "wait" : "pointer" }}
+        >
+          {isLoading ? "⏳ Yükleniyor..." : "🔄 Yenile"}
+        </Button>
+      </Flex>
 
       {isLoading && <Text size="2" color="gray">⏳ Yükleniyor...</Text>}
 

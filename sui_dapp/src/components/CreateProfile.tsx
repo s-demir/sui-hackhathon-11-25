@@ -61,6 +61,8 @@ export function CreateProfile() {
           const errorMsg = err.message || "";
           if (errorMsg.includes("MoveAbort") && errorMsg.includes("0)")) {
             setError(`❌ Bu username zaten kullanılıyor! Farklı bir username deneyin.`);
+          } else if (errorMsg.includes("MoveAbort") && errorMsg.includes("2)")) {
+            setError(`❌ Bu cüzdan zaten bir profile sahip! Her cüzdan sadece 1 profil oluşturabilir.`);
           } else {
             setError(errorMsg || "Profil oluşturulamadı");
           }
