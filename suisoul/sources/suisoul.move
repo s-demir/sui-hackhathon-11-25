@@ -9,6 +9,7 @@ module suisoul::trust_system {
         id: UID,
         usernames: Table<String, address>,
         username_list: vector<String>,
+        wallet_profiles: Table<address, address>, // wallet -> profile_id mapping
     }
 
     public struct UserProfile has key, store {
@@ -33,7 +34,13 @@ module suisoul::trust_system {
         username: String, 
         ctx: &mut TxContext
     ) {
-        assert!(!table::contains(&registry.usernames, username), 0);
+        let sender = tx_context::sender(ctx);
+        
+        // 1 wallet = 1 profil kontrolü
+        assert!(!table::contains(&registry.wallet_profiles, sender), 2); // Error code: 2 = Wallet already has a profile
+        
+        // Username benzersizlik kontrolü
+        assert!(!table::contains(&registry.usernames, username), 0); // Error code: 0 = Username already taken
         
         let profile_id = object::new(ctx);
         let profile_address = object::uid_to_address(&profile_id);
@@ -42,11 +49,16 @@ module suisoul::trust_system {
             id: profile_id,
             username,
             trust_score: 100,
-            owner: tx_context::sender(ctx),
+            owner: sender,
         };
         
+        // Wallet'ı kaydet
+        table::add(&mut registry.wallet_profiles, sender, profile_address);
+        
+        // Username'i kaydet
         table::add(&mut registry.usernames, profile.username, profile_address);
         vector::push_back(&mut registry.username_list, profile.username);
+        
         transfer::share_object(profile);
     }
 
@@ -113,6 +125,7 @@ module suisoul::trust_system {
             id: object::new(ctx),
             usernames: table::new(ctx),
             username_list: vector::empty(),
+            wallet_profiles: table::new(ctx),
         });
     }
 }
