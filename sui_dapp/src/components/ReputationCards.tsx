@@ -1,12 +1,26 @@
 import { useSuiClientQuery, useCurrentAccount } from "@mysten/dapp-kit";
 import { Button, Flex, Text, TextField, Card } from "@radix-ui/themes";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { STRUCT_TYPES } from "../constants";
 
 export function ReputationCards() {
   const currentAccount = useCurrentAccount();
   const [address, setAddress] = useState("");
   const [searchAddress, setSearchAddress] = useState("");
+
+  // ViewProfile'dan gelen event'i dinle
+  useEffect(() => {
+    const handleViewCards = (event: any) => {
+      const ownerAddress = event.detail.address;
+      if (ownerAddress) {
+        setAddress(ownerAddress);
+        setSearchAddress(ownerAddress);
+      }
+    };
+
+    window.addEventListener('viewReputationCards', handleViewCards);
+    return () => window.removeEventListener('viewReputationCards', handleViewCards);
+  }, []);
   const { data, isLoading, error, refetch } = useSuiClientQuery(
     "getOwnedObjects",
     {
@@ -39,7 +53,7 @@ export function ReputationCards() {
   const cards = data?.data || [];
 
   return (
-    <Flex direction="column" gap="3" style={{ padding: "20px", border: "1px solid var(--gray-a4)", borderRadius: "8px" }}>
+    <Flex direction="column" gap="3" style={{ padding: "20px", border: "1px solid var(--gray-a4)", borderRadius: "8px" }} data-reputation-cards>
       <Text size="5" weight="bold">
         📋 Reputation Kartları
       </Text>

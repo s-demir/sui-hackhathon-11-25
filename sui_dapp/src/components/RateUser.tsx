@@ -66,8 +66,12 @@ export function RateUser() {
 
   const handleRateUser = () => {
     // Validasyon
+    if (!username.trim()) {
+      setError("Kullanıcı adı gerekli! Önce bir kullanıcı arayın.");
+      return;
+    }
     if (!profileId.trim()) {
-      setError("Profile ID gerekli!");
+      setError("Kullanıcı bulunamadı! Önce arama yapın.");
       return;
     }
     if (!comment.trim()) {
@@ -116,6 +120,7 @@ export function RateUser() {
           setSuccess(true);
           setIsLoading(false);
           // Formu temizle
+          setUsername("");
           setProfileId("");
           setComment("");
           setScore(5);
@@ -150,7 +155,7 @@ export function RateUser() {
       {/* Username Search */}
       <Flex direction="column" gap="2">
         <Text size="2" weight="bold">
-          🔍 Kullanıcı Ara (İsteğe Bağlı):
+          🔍 Puanlamak İstediğiniz Kullanıcı:
         </Text>
         <Flex gap="2">
           <TextField.Root
@@ -159,33 +164,27 @@ export function RateUser() {
             onChange={(e) => setUsername(e.target.value)}
             disabled={isLoading || searchLoading}
             style={{ flex: 1 }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && username.trim()) {
+                handleSearchUsername();
+              }
+            }}
           />
           <Button
             onClick={handleSearchUsername}
             disabled={isLoading || searchLoading || !username.trim()}
-            variant="soft"
+            style={{ cursor: "pointer" }}
           >
-            {searchLoading ? "Arıyor..." : "Ara"}
+            {searchLoading ? "Arıyor..." : "🔍 Ara"}
           </Button>
         </Flex>
+        {profileId && (
+          <Text size="2" color="green" weight="bold">
+            ✅ Kullanıcı bulundu: @{username}
+          </Text>
+        )}
         <Text size="1" color="gray">
           💡 İpucu: "Kullanıcılar" listesinden bir kullanıcı adı kopyalayıp buraya yapıştırabilirsiniz
-        </Text>
-      </Flex>
-
-      {/* Profile ID Input */}
-      <Flex direction="column" gap="2">
-        <Text size="2" weight="bold">
-          UserProfile Object ID:
-        </Text>
-        <TextField.Root
-          placeholder="0x..."
-          value={profileId}
-          onChange={(e) => setProfileId(e.target.value)}
-          disabled={isLoading}
-        />
-        <Text size="1" color="gray">
-          ℹ️ Yukarıdaki aramayı kullanın veya Object ID'yi manuel girin
         </Text>
       </Flex>
 
