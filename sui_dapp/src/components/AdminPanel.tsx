@@ -58,24 +58,24 @@ export function AdminPanel() {
   // --- Buradan aşağısı sadece Yöneticiye görünür ---
 
   const handleApproveTask = () => {
-    if (!targetProfileId) return alert("Lütfen bir Profil ID girin!");
-    if (!adminCapObj) return alert("AdminCap bulunamadı!");
+    if (!targetProfileId) return alert("Please enter a Profile ID!");
+    if (!adminCapObj) return alert("AdminCap not found!");
 
     const tx = new Transaction();
 
     tx.moveCall({
       target: `${PACKAGE_ID}::${MODULE_NAME}::complete_redemption_task`,
       arguments: [
-        tx.object(REGISTRY_ID), // Registry objesi
+        tx.object(REGISTRY_ID), // Registry object
         tx.object(adminCapObj.data!.objectId), // AdminCap
-        tx.object(targetProfileId), // Profil
+        tx.object(targetProfileId), // Profile
       ],
     });
 
     signAndExecute(
       { transaction: tx },
       {
-        onSuccess: () => alert("Görev Onaylandı! Kullanıcı +15 Puan kazandı."),
+        onSuccess: () => alert("Task Approved! User earned +15 Points."),
         onError: (err) => console.error(err),
       }
     );
@@ -83,21 +83,21 @@ export function AdminPanel() {
 
   return (
     <Card style={{ background: "#ffebee", border: "2px solid red", marginTop: "20px" }}>
-      <Heading color="red" size="4">🔒 Yönetici Paneli</Heading>
+      <Heading color="red" size="4">🔒 Admin Panel</Heading>
       <Text size="2" color="gray" mb="2">
-        Sadece yetkili yöneticiler bu alanı görebilir.
+        Only authorized administrators can see this area.
       </Text>
 
       <Flex direction="column" gap="2" mt="3">
-        <Text weight="bold">Onarıcı Adalet Görevi Onayla</Text>
+        <Text weight="bold">Approve Restorative Justice Task</Text>
         <TextField.Root 
-            placeholder="Kullanıcının Profil ID'si (0x...)" 
+            placeholder="User's Profile ID (0x...)" 
             value={targetProfileId}
             onChange={(e) => setTargetProfileId(e.target.value)}
         />
         
         <Button color="red" onClick={handleApproveTask}>
-          ✅ Görevi Onayla (+15 Puan)
+          ✅ Approve Task (+15 Points)
         </Button>
       </Flex>
     </Card>

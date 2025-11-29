@@ -18,7 +18,7 @@ export function RateUser() {
 
   const handleSearchUsername = async () => {
     if (!username.trim()) {
-      setError("Kullanıcı adı gerekli!");
+      setError("Username is required!");
       return;
     }
 
@@ -51,35 +51,35 @@ export function RateUser() {
           setProfileId(objectId);
           setError(null);
         } else {
-          setError("Kullanıcı bulunamadı!");
+          setError("User not found!");
         }
       } else {
-        setError("Kullanıcı bulunamadı!");
+        setError("User not found!");
       }
     } catch (err: any) {
-      console.error("❌ Kullanıcı arama hatası:", err);
-      setError(err.message || "Arama başarısız");
+      console.error("❌ User search error:", err);
+      setError(err.message || "Search failed");
     } finally {
       setSearchLoading(false);
     }
   };
 
   const handleRateUser = () => {
-    // Validasyon
+    // Validation
     if (!username.trim()) {
-      setError("Kullanıcı adı gerekli! Önce bir kullanıcı arayın.");
+      setError("Username is required! Search for a user first.");
       return;
     }
     if (!profileId.trim()) {
-      setError("Kullanıcı bulunamadı! Önce arama yapın.");
+      setError("User not found! Search first.");
       return;
     }
     if (!comment.trim()) {
-      setError("Yorum gerekli!");
+      setError("Comment is required!");
       return;
     }
     if (score < 1 || score > 5) {
-      setError("Puan 1-5 arası olmalı!");
+      setError("Score must be between 1-5!");
       return;
     }
 
@@ -91,13 +91,13 @@ export function RateUser() {
     const tx = new Transaction();
 
     /**
-     * moveCall parametreleri:
+     * moveCall parameters:
      * 
-     * target: Contract fonksiyonunun tam yolu
-     * arguments: Fonksiyonun parametreleri (sırayla)
-     *   - tx.object(profileId): UserProfile object referansı
-     *   - tx.pure.u64(score): u64 tipinde puan
-     *   - tx.pure.string(comment): String tipinde yorum
+     * target: Full path to contract function
+     * arguments: Function parameters (in order)
+     *   - tx.object(profileId): UserProfile object reference
+     *   - tx.pure.u64(score): Score as u64
+     *   - tx.pure.string(comment): Comment as String
      */
     tx.moveCall({
       target: `${PACKAGE_ID}::${MODULE_NAME}::${FUNCTIONS.RATE_USER}`,
@@ -108,32 +108,32 @@ export function RateUser() {
       ],
     });
 
-    // Transaction'ı gönder
+    // Send transaction
     signAndExecute(
       {
         transaction: tx,
       },
       {
-        // Başarılı olursa
+        // On success
         onSuccess: (result) => {
-          console.log("✅ Kullanıcı puanlandı!", result);
+          console.log("✅ User rated!", result);
           setSuccess(true);
           setIsLoading(false);
-          // Formu temizle
+          // Clear form
           setUsername("");
           setProfileId("");
           setComment("");
           setScore(5);
         },
-        // Hata olursa
+        // On error
         onError: (err) => {
-          console.error("❌ Hata:", err);
+          console.error("❌ Error:", err);
           
-          // Kendini puanlama hatası kontrolü
+          // Self-rating error check
           if (err.message && err.message.includes("MoveAbort") && err.message.includes("1")) {
-            setError("❌ Kendini puanlayamazsın! Başka bir kullanıcının Object ID'sini kullan.");
+            setError("❌ You cannot rate yourself! Use another user's Object ID.");
           } else {
-            setError(err.message || "Puanlama başarısız");
+            setError(err.message || "Rating failed");
           }
           
           setIsLoading(false);
@@ -145,21 +145,21 @@ export function RateUser() {
   return (
     <Flex direction="column" gap="3" style={{ padding: "20px", border: "1px solid var(--gray-a4)", borderRadius: "8px" }}>
       <Text size="5" weight="bold">
-        ⭐ Kullanıcı Puanla
+        ⭐ Rate User
       </Text>
       
       <Text size="2" color="gray">
-        Başka bir kullanıcının güven puanını değiştirin ve ona silinemeyen bir ReputationCard gönderin.
+        Change another user's trust score and send them a permanent ReputationCard.
       </Text>
 
       {/* Username Search */}
       <Flex direction="column" gap="2">
         <Text size="2" weight="bold">
-          🔍 Puanlamak İstediğiniz Kullanıcı:
+          🔍 User to Rate:
         </Text>
         <Flex gap="2">
           <TextField.Root
-            placeholder="Kullanıcı adını girin..."
+            placeholder="Enter username..."
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             disabled={isLoading || searchLoading}
@@ -175,23 +175,23 @@ export function RateUser() {
             disabled={isLoading || searchLoading || !username.trim()}
             style={{ cursor: "pointer" }}
           >
-            {searchLoading ? "Arıyor..." : "🔍 Ara"}
+            {searchLoading ? "Searching..." : "🔍 Search"}
           </Button>
         </Flex>
         {profileId && (
           <Text size="2" color="green" weight="bold">
-            ✅ Kullanıcı bulundu: @{username}
+            ✅ User found: @{username}
           </Text>
         )}
         <Text size="1" color="gray">
-          💡 İpucu: "Kullanıcılar" listesinden bir kullanıcı adı kopyalayıp buraya yapıştırabilirsiniz
+          💡 Tip: Copy a username from the "Users" list and paste it here
         </Text>
       </Flex>
 
       {/* Score Selector */}
       <Flex direction="column" gap="2">
         <Text size="2" weight="bold">
-          Puan: {score} / 5
+          Score: {score} / 5
         </Text>
         <Flex gap="2">
           {[1, 2, 3, 4, 5].map((num) => (
@@ -207,24 +207,24 @@ export function RateUser() {
           ))}
         </Flex>
         <Text size="1" color="gray">
-          ℹ️ 1 = Kötü (-5 puan), 5 = İyi (+3 puan)
+          ℹ️ 1 = Bad (-5 points), 5 = Good (+3 points)
         </Text>
       </Flex>
 
       {/* Comment Input */}
       <Flex direction="column" gap="2">
         <Text size="2" weight="bold">
-          Yorum:
+          Comment:
         </Text>
         <TextArea
-          placeholder="Değerlendirmenizi yazın..."
+          placeholder="Write your review..."
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           disabled={isLoading}
           rows={3}
         />
         <Text size="1" color="gray">
-          ℹ️ Bu yorum blockchain'de kalıcı olarak saklanacak
+          ℹ️ This comment will be permanently stored on the blockchain
         </Text>
       </Flex>
 
@@ -235,54 +235,65 @@ export function RateUser() {
         size="3"
         style={{ cursor: isLoading ? "wait" : "pointer" }}
       >
-        {isLoading ? "Puanlanıyor..." : "Puanla"}
+        {isLoading ? "Rating..." : "Rate"}
       </Button>
 
       {/* Success Message */}
       {success && (
         <Text size="2" color="green">
-          ✅ Kullanıcı başarıyla puanlandı! ReputationCard gönderildi.
+          ✅ User successfully rated! ReputationCard sent.
         </Text>
       )}
 
       {/* Error Message */}
       {error && (
         <Text size="2" color="red">
-          ❌ Hata: {error}
+          ❌ Error: {error}
         </Text>
       )}
 
       {/* Success Message */}
       {success && (
-        <Flex direction="column" gap="2" style={{ background: "var(--green-a3)", padding: "15px", borderRadius: "8px", border: "2px solid var(--green-9)" }}>
+        <Flex 
+          direction="column" 
+          gap="2" 
+          style={{ 
+            background: "var(--green-a3)", 
+            padding: "15px", 
+            borderRadius: "8px", 
+            border: "2px solid var(--green-9)",
+            animation: "fadeIn 0.5s ease-in",
+            boxShadow: "0 4px 12px var(--green-a5)",
+          }}
+        >
           <Text size="3" weight="bold" color="green">
-            ✅ Puanlama Başarılı!
+            ✅ Rating Successful!
           </Text>
           <Text size="2">
-            ReputationCard gönderildi ve güven puanı güncellendi.
+            ReputationCard sent and trust score updated.
           </Text>
           <Text size="2" weight="bold" color="blue">
-            💡 İpucu: ViewProfile bölümünden "🔄 Puanı Yenile" butonuna basarak güncel puanı görebilirsiniz.
+            💡 Tip: Click "🔄 Refresh Score" in ViewProfile to see the updated score.
           </Text>
         </Flex>
       )}
 
-      {/* Açıklama */}
+      {/* Description */}
       <Flex direction="column" gap="1" style={{ marginTop: "10px", background: "var(--gray-a2)", padding: "10px", borderRadius: "4px" }}>
         <Text size="1" weight="bold">
-          📋 Ne olacak?
+          📋 What happens?
         </Text>
         <Text size="1" color="gray">
-          • Puanlanan kişinin trust_score'u değişecek
+          • The rated person's trust_score will change
         </Text>
         <Text size="1" color="gray">
-          • Puanlanan kişiye silinemeyen ReputationCard gönderilecek
+          • A permanent ReputationCard will be sent to the rated person
         </Text>
         <Text size="1" color="gray">
-          • Kart puanı ve yorumu içerecek
+          • The card will contain the score and comment
         </Text>
         <Text size="1" color="gray">
-          • ⚠️ Kimse kendini puanlayamaz!
+          • ⚠️ Nobody can rate themselves!
         </Text>
       </Flex>
     </Flex>

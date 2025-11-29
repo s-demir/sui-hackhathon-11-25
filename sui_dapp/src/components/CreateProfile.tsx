@@ -14,15 +14,20 @@ export function CreateProfile() {
 
   const handleCreateProfile = () => {
     if (!username.trim()) {
-      setError("Kullanıcı adı gerekli!");
+      setError("Username is required!");
       return;
     }
     if (username.length < 3) {
-      setError("Kullanıcı adı en az 3 karakter olmalı!");
+      setError("Username must be at least 3 characters!");
       return;
     }
     if (username.length > 20) {
-      setError("Kullanıcı adı en fazla 20 karakter olmalı!");
+      setError("Username must be at most 20 characters!");
+      return;
+    }
+    // Only allow alphanumeric and underscore (no Turkish or special chars)
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      setError("Username can only contain letters (a-z), numbers (0-9), and underscores (_)!");
       return;
     }
 
@@ -60,11 +65,11 @@ export function CreateProfile() {
         onError: (err) => {
           const errorMsg = err.message || "";
           if (errorMsg.includes("MoveAbort") && errorMsg.includes("0)")) {
-            setError(`❌ Bu username zaten kullanılıyor! Farklı bir username deneyin.`);
+            setError(`Username already taken! Try a different one.`);
           } else if (errorMsg.includes("MoveAbort") && errorMsg.includes("2)")) {
-            setError(`❌ Bu cüzdan zaten bir profile sahip! Her cüzdan sadece 1 profil oluşturabilir.`);
+            setError(`This wallet already has a profile! Each wallet can only create 1 profile.`);
           } else {
-            setError(errorMsg || "Profil oluşturulamadı");
+            setError(errorMsg || "Failed to create profile");
           }
           setIsLoading(false);
         },
@@ -73,28 +78,28 @@ export function CreateProfile() {
   };
 
   return (
-    <Flex direction="column" gap="3" style={{ padding: "20px" }}>
+    <Flex direction="column" gap="3" style={{ padding: "20px", border: "1px solid var(--gray-a4)", borderRadius: "8px" }}>
       <Text size="5" weight="bold">
-        🎯 Profil Oluştur
+        🎯 Create Profile
       </Text>
       
       <Text size="2" color="gray">
-        Başlangıç güven puanı: 100
+        Initial trust score: 100 points
       </Text>
 
       <Flex direction="column" gap="2">
         <Text size="2" weight="bold">
-          Kullanıcı Adı:
+          Username:
         </Text>
         <TextField.Root
-          placeholder={`örn: user_${Math.floor(Math.random() * 10000)}`}
+          placeholder={`e.g. user_${Math.floor(Math.random() * 10000)}`}
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           disabled={isLoading || success}
         />
         <Flex justify="between" align="center">
           <Text size="1" color="gray">
-            3-20 karakter arası, benzersiz olmalı
+            3-20 characters, letters, numbers, underscore only
           </Text>
           <Button
             size="1"
@@ -103,35 +108,45 @@ export function CreateProfile() {
             disabled={isLoading || success}
             style={{ cursor: "pointer" }}
           >
-            🎲 Rastgele
+            🎲 Random
           </Button>
         </Flex>
       </Flex>
 
-      {/* Profil Oluştur Butonu */}
+      {/* Create Profile Button */}
       <Button
         onClick={handleCreateProfile}
         disabled={isLoading || success || !username.trim()}
         size="3"
         style={{ cursor: isLoading ? "wait" : "pointer" }}
       >
-        {isLoading ? "Oluşturuluyor..." : success ? "✅ Profil Oluşturuldu!" : "Profil Oluştur"}
+        {isLoading ? "Creating..." : success ? "✅ Profile Created!" : "Create Profile"}
       </Button>
 
-      {/* Başarı mesajı */}
+      {/* Success message */}
       {success && createdProfileId && (
-        <Flex direction="column" gap="2" style={{ background: "var(--green-a3)", padding: "15px", borderRadius: "8px", border: "2px solid var(--green-9)" }}>
+        <Flex 
+          direction="column" 
+          gap="2" 
+          style={{ 
+            background: "var(--green-a3)", 
+            padding: "15px", 
+            borderRadius: "8px", 
+            border: "2px solid var(--green-9)",
+            animation: "slideIn 0.4s ease-out",
+          }}
+        >
           <Text size="3" weight="bold" color="green">
-            ✅ Profiliniz Oluşturuldu!
+            ✅ Profile Created Successfully!
           </Text>
           
           <Text size="2">
-            Güven puanınız: <strong>100</strong>
+            Your trust score: <strong>100/100</strong>
           </Text>
           
           <Flex direction="column" gap="1">
             <Text size="2" weight="bold">
-              🎯 Profil Object ID'niz:
+              🎯 Your Profile Object ID:
             </Text>
             <Text 
               size="2" 
@@ -150,29 +165,29 @@ export function CreateProfile() {
           <Button
             onClick={() => {
               navigator.clipboard.writeText(createdProfileId);
-              alert("✅ Object ID kopyalandı!");
+              alert("✅ Object ID copied to clipboard!");
             }}
             variant="solid"
             style={{ cursor: "pointer" }}
           >
-            📋 Object ID'yi Kopyala
+            📋 Copy Object ID
           </Button>
           
           <Flex direction="column" gap="1" style={{ marginTop: "10px", background: "var(--yellow-a2)", padding: "10px", borderRadius: "4px" }}>
             <Text size="1" weight="bold">
-              💡 Önemli!
+              💡 Important!
             </Text>
             <Text size="1">
-              Bu Object ID'yi arkadaşlarınızla paylaşın! Sizi puanlamak için bu ID'ye ihtiyaçları var.
+              Share this Object ID with others! They need it to rate you.
             </Text>
           </Flex>
         </Flex>
       )}
 
-      {/* Hata mesajı */}
+      {/* Error message */}
       {error && (
         <Text size="2" color="red">
-          ❌ Hata: {error}
+          ❌ {error}
         </Text>
       )}
 

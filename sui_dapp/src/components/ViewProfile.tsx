@@ -30,7 +30,7 @@ export function ViewProfile() {
 
   const handleSearchUsername = async () => {
     if (!usernameInput.trim()) {
-      setSearchError("Kullanıcı adı gerekli!");
+      setSearchError("Username is required!");
       return;
     }
 
@@ -63,14 +63,14 @@ export function ViewProfile() {
           setSearchId(objectId);
           setSearchError(null);
         } else {
-          setSearchError("Kullanıcı bulunamadı!");
+          setSearchError("User not found!");
         }
       } else {
-        setSearchError("Kullanıcı bulunamadı!");
+        setSearchError("User not found!");
       }
     } catch (err: any) {
-      console.error("❌ Kullanıcı arama hatası:", err);
-      setSearchError(err.message || "Arama başarısız");
+      console.error("❌ User search error:", err);
+      setSearchError(err.message || "Search failed");
     } finally {
       setSearchLoading(false);
     }
@@ -104,21 +104,21 @@ export function ViewProfile() {
   return (
     <Flex direction="column" gap="3" style={{ padding: "20px", border: "1px solid var(--gray-a4)", borderRadius: "8px" }} data-view-profile>
       <Text size="5" weight="bold">
-        🔍 Profil Ara
+        🔍 Search Profile
       </Text>
       
       <Text size="2" color="gray">
-        Kullanıcı adı ile bir profili arayın ve güven puanını görüntüleyin.
+        Search for a profile by username and view their trust score.
       </Text>
 
-      {/* Kullanıcı Ara */}
+      {/* User Search */}
       <Flex direction="column" gap="2">
         <Text size="2" weight="bold">
-          🔍 Kullanıcı Ara:
+          🔍 Search User:
         </Text>
         <Flex gap="2">
           <TextField.Root
-            placeholder="Kullanıcı adını girin..."
+            placeholder="Enter username..."
             value={usernameInput}
             onChange={(e) => setUsernameInput(e.target.value)}
             disabled={isLoading || searchLoading}
@@ -134,7 +134,7 @@ export function ViewProfile() {
             disabled={isLoading || searchLoading || !usernameInput.trim()}
             style={{ cursor: "pointer" }}
           >
-            {searchLoading ? "Arıyor..." : "🔍 Ara"}
+            {searchLoading ? "Searching..." : "🔍 Search"}
           </Button>
         </Flex>
       {searchError && (
@@ -143,14 +143,14 @@ export function ViewProfile() {
         </Text>
       )}
         <Text size="1" color="gray">
-          💡 İpucu: "Kullanıcılar" listesinden bir kullanıcı adı kopyalayıp buraya yapıştırabilirsiniz
+          💡 Tip: Copy a username from the "Users" list and paste it here
         </Text>
       </Flex>
 
       {/* Loading State */}
       {(isLoading || searchLoading) && (
         <Text size="2" color="gray">
-          ⏳ Profil yükleniyor...
+          ⏳ Loading profile...
         </Text>
       )}
 
@@ -158,10 +158,10 @@ export function ViewProfile() {
       {(error || searchError) && (
         <Flex direction="column" gap="2" style={{ background: "var(--red-a2)", padding: "10px", borderRadius: "4px" }}>
           <Text size="2" color="red" weight="bold">
-            ❌ Hata
+            ❌ Error
           </Text>
           <Text size="1" color="red">
-            {searchError || error?.message || "Profil bulunamadı"}
+            {searchError || error?.message || "Profile not found"}
           </Text>
         </Flex>
       )}
@@ -171,7 +171,7 @@ export function ViewProfile() {
         <Flex direction="column" gap="3" style={{ background: "var(--green-a2)", padding: "15px", borderRadius: "8px" }}>
           <Flex justify="between" align="center">
             <Text size="4" weight="bold">
-              ✅ Profil Bulundu
+              ✅ Profile Found
             </Text>
             <Button
               onClick={() => refetch()}
@@ -180,7 +180,7 @@ export function ViewProfile() {
               disabled={isLoading}
               style={{ cursor: isLoading ? "wait" : "pointer" }}
             >
-              {isLoading ? "⏳" : "🔄 Puanı Yenile"}
+              {isLoading ? "⏳" : "🔄 Refresh Score"}
             </Button>
           </Flex>
 
@@ -188,7 +188,7 @@ export function ViewProfile() {
           {username && (
             <Flex direction="column" gap="1">
               <Text size="2" color="gray">
-                Kullanıcı Adı:
+                Username:
               </Text>
               <Text size="5" weight="bold">
                 @{username}
@@ -196,10 +196,10 @@ export function ViewProfile() {
             </Flex>
           )}
 
-          {/* Trust Score - Büyük ve belirgin */}
+          {/* Trust Score - Large and prominent */}
           <Flex direction="column" gap="1">
             <Text size="2" color="gray">
-              Güven Puanı:
+              Trust Score:
             </Text>
             <Text size="8" weight="bold" style={{ color: getTrustScoreColor(Number(trustScore)) }}>
               {trustScore} / 100
@@ -209,7 +209,7 @@ export function ViewProfile() {
             </Text>
           </Flex>
 
-          {/* Reputation Kartlarını Görüntüle */}
+          {/* Display Reputation Cards */}
           <Button
             onClick={() => {
               setOwnerAddress(owner);
@@ -219,17 +219,17 @@ export function ViewProfile() {
             variant={showCards ? "soft" : "solid"}
             style={{ cursor: "pointer" }}
           >
-            {showCards ? "📋 Kartları Gizle" : "📋 Reputation Kartlarını Görüntüle"}
+            {showCards ? "📋 Hide Cards" : "📋 View Reputation Cards"}
           </Button>
         </Flex>
       )}
 
-      {/* Reputation Cards - Profil altında göster */}
+      {/* Reputation Cards - Show below profile */}
       {showCards && ownerAddress && (
         <Flex direction="column" gap="3" style={{ marginTop: "15px", padding: "15px", background: "var(--gray-a2)", borderRadius: "8px" }}>
           <Flex justify="between" align="center">
             <Text size="4" weight="bold">
-              📋 Reputation Kartları
+              📋 Reputation Cards
             </Text>
             <Button
               onClick={() => refetchCards()}
@@ -238,27 +238,27 @@ export function ViewProfile() {
               disabled={cardsLoading}
               style={{ cursor: "pointer" }}
             >
-              🔄 Yenile
+              🔄 Refresh
             </Button>
           </Flex>
 
           <Text size="2" color="gray">
-            @{username} kullanıcısının aldığı tüm puanlama kartları
+            All rating cards received by @{username}
           </Text>
 
           {cardsLoading && (
             <Text size="2" color="gray">
-              ⏳ Kartlar yükleniyor...
+              ⏳ Loading cards...
             </Text>
           )}
 
           {!cardsLoading && cards.length === 0 && (
             <Flex direction="column" gap="2" style={{ background: "var(--gray-a3)", padding: "15px", borderRadius: "4px" }}>
               <Text size="2" weight="bold">
-                📭 Henüz kart yok
+                📭 No cards yet
               </Text>
               <Text size="1" color="gray">
-                Bu kullanıcı henüz hiç puanlanmamış.
+                This user has not been rated yet.
               </Text>
             </Flex>
           )}
@@ -266,7 +266,7 @@ export function ViewProfile() {
           {!cardsLoading && cards.length > 0 && (
             <Flex direction="column" gap="2">
               <Text size="2" weight="bold">
-                Toplam {cards.length} kart
+                Total {cards.length} cards
               </Text>
               {cards.map((card: any) => {
                 const content = card.data?.content;
@@ -276,9 +276,26 @@ export function ViewProfile() {
                 const objectId = card.data?.objectId;
 
                 return (
-                  <Card key={objectId} style={{ padding: "15px" }}>
+                  <Card 
+                    key={objectId} 
+                    style={{ 
+                      padding: "15px",
+                      transition: "all 0.3s ease",
+                      border: "1px solid var(--gray-a4)",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                      e.currentTarget.style.boxShadow = "0 8px 16px var(--gray-a5)";
+                      e.currentTarget.style.borderColor = "var(--blue-a7)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.boxShadow = "none";
+                      e.currentTarget.style.borderColor = "var(--gray-a4)";
+                    }}
+                  >
                     <Flex direction="column" gap="2">
-                      {/* Puan */}
+                      {/* Score */}
                       <Flex align="center" gap="2">
                         <Text size="6" weight="bold" style={{ color: getCardScoreColor(Number(scoreGiven)) }}>
                           {scoreGiven} ⭐
@@ -288,17 +305,17 @@ export function ViewProfile() {
                         </Text>
                       </Flex>
 
-                      {/* Yorum */}
+                      {/* Comment */}
                       <Flex direction="column" gap="1">
                         <Text size="2" weight="bold" color="gray">
-                          Yorum:
+                          Comment:
                         </Text>
                         <Text size="2" style={{ fontStyle: "italic" }}>
                           "{comment}"
                         </Text>
                       </Flex>
 
-                      {/* Silinemeyen Badge */}
+                      {/* Permanent Badge */}
                       <Flex align="center" gap="1" style={{ marginTop: "5px" }}>
                         <Text size="1" weight="bold" style={{ 
                           background: "var(--red-a3)", 
@@ -306,11 +323,11 @@ export function ViewProfile() {
                           borderRadius: "4px",
                           color: "var(--red-11)"
                         }}>
-                          🔒 SİLİNEMEZ
+                          🔒 PERMANENT
                         </Text>
                         <Text size="1" color="gray">
-                          Bu kart kalıcıdır
-                        </Text>
+                          This card is permanent
+        </Text>
                       </Flex>
                     </Flex>
                   </Card>
@@ -327,22 +344,22 @@ export function ViewProfile() {
 }
 
 function getTrustScoreColor(score: number): string {
-  if (score >= 80) return "#22c55e"; // Yeşil - İyi
-  if (score >= 60) return "#eab308"; // Sarı - Orta
-  if (score >= 40) return "#f97316"; // Turuncu - Düşük
-  return "#ef4444"; // Kırmızı - Kötü
+  if (score >= 80) return "#22c55e"; // Green - Good
+  if (score >= 60) return "#eab308"; // Yellow - Medium
+  if (score >= 40) return "#f97316"; // Orange - Low
+  return "#ef4444"; // Red - Bad
 }
 
 function getTrustScoreLabel(score: number): string {
-  if (score >= 80) return "⭐ Mükemmel güven puanı!";
-  if (score >= 60) return "👍 İyi güven puanı";
-  if (score >= 40) return "⚠️ Orta güven puanı";
-  return "❌ Düşük güven puanı";
+  if (score >= 80) return "⭐ Excellent trust score!";
+  if (score >= 60) return "👍 Good trust score";
+  if (score >= 40) return "⚠️ Medium trust score";
+  return "❌ Low trust score";
 }
 
 function getCardScoreColor(score: number): string {
-  if (score >= 4) return "#22c55e"; // Yeşil - İyi
-  if (score >= 3) return "#eab308"; // Sarı - Orta
-  if (score >= 2) return "#f97316"; // Turuncu - Düşük
-  return "#ef4444"; // Kırmızı - Kötü
+  if (score >= 4) return "#22c55e"; // Green - Good
+  if (score >= 3) return "#eab308"; // Yellow - Medium
+  if (score >= 2) return "#f97316"; // Orange - Low
+  return "#ef4444"; // Red - Bad
 }

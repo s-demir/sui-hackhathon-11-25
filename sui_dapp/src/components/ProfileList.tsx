@@ -14,19 +14,19 @@ export function ProfileList() {
       }}
     >
       <Text size="3" weight="bold">
-        💡 Nasıl Kullanılır?
+        💡 How to Use?
       </Text>
       
       <Text size="2">
-        <strong>1. Profil Oluştur:</strong> Username ile profil oluşturun
+        <strong>1. Create Profile:</strong> Create a profile with your username
       </Text>
       
       <Text size="2">
-        <strong>2. Object ID Paylaş:</strong> Profil ID'nizi arkadaşlarınızla paylaşın
+        <strong>2. Share Object ID:</strong> Share your Profile ID with friends
       </Text>
       
       <Text size="2">
-        <strong>3. Puanla:</strong> "Kullanıcı Puanla" bölümünden Object ID ile puanlayın
+        <strong>3. Rate:</strong> Rate using Object ID from the "Rate User" section
       </Text>
       
       <a 
@@ -36,7 +36,7 @@ export function ProfileList() {
         style={{ textDecoration: "none" }}
       >
         <Button variant="soft" style={{ cursor: "pointer", width: "100%" }}>
-          🔍 Explorer'da Tüm Profilleri Gör
+          🔍 View All Profiles in Explorer
         </Button>
       </a>
     </Flex>

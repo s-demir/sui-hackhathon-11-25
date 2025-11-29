@@ -53,7 +53,7 @@ export function MyProfile() {
 
   const fetchMyProfile = async () => {
     if (!currentAccount?.address) {
-      setError("❌ Önce cüzdanınızı bağlayın!");
+      setError("❌ Connect your wallet first!");
       return;
     }
 
@@ -62,7 +62,7 @@ export function MyProfile() {
     setShowCards(false);
 
     try {
-      // Registry objesini çek
+      // Fetch registry object
       const registryObj = await suiClient.getObject({
         id: REGISTRY_ID,
         options: { showContent: true },
@@ -72,12 +72,12 @@ export function MyProfile() {
       const walletProfilesId = registryContent?.fields?.wallet_profiles?.fields?.id?.id;
 
       if (walletProfilesId) {
-        // wallet_profiles table objesini çek
+        // Fetch wallet_profiles table object
         const tableObj = await suiClient.getDynamicFields({
           parentId: walletProfilesId,
         });
 
-        // Her bir field için kontrol et
+        // Check each field
         for (const field of tableObj.data) {
           const fieldData = await suiClient.getDynamicFieldObject({
             parentId: walletProfilesId,
@@ -89,7 +89,7 @@ export function MyProfile() {
           const value = fieldContent?.fields?.value;
 
           if (key === currentAccount.address) {
-            // Bu bizim profilimiz!
+            // This is our profile!
             setProfileId(value);
             setOwnerAddress(currentAccount.address);
             setError(null);
@@ -99,17 +99,17 @@ export function MyProfile() {
         }
       }
 
-      // Hiçbir profil bulunamadı
-      setError("Profiliniz bulunamadı! Önce profil oluşturun.");
+      // No profile found
+      setError("Profile not found! Create a profile first.");
     } catch (err: any) {
       console.error("Profile fetch error:", err);
-      setError(err.message || "Profil yüklenemedi");
+      setError(err.message || "Profile could not be loaded");
     } finally {
       setLoading(false);
     }
   };
 
-  // Component mount olunca otomatik yükle
+  // Auto-load on component mount
   useEffect(() => {
     if (currentAccount?.address) {
       fetchMyProfile();
@@ -119,30 +119,30 @@ export function MyProfile() {
   return (
     <Flex direction="column" gap="3" style={{ padding: "20px", border: "1px solid var(--gray-a4)", borderRadius: "8px" }}>
       <Text size="5" weight="bold">
-        👤 Profilimi Görüntüle
+        👤 View My Profile
       </Text>
       
       <Text size="2" color="gray">
-        Kendi profilinizi ve aldığınız reputation kartlarını görüntüleyin.
+        View your profile and reputation cards you've received.
       </Text>
 
-      {/* Yenile Butonu */}
+      {/* Refresh Button */}
       <Button
         onClick={fetchMyProfile}
         disabled={loading || !currentAccount}
         size="3"
         style={{ cursor: "pointer" }}
       >
-        {loading ? "⏳ Yükleniyor..." : "🔄 Profilimi Yenile"}
+        {loading ? "⏳ Loading..." : "🔄 Refresh My Profile"}
       </Button>
 
       {!currentAccount && (
         <Flex direction="column" gap="2" style={{ background: "var(--yellow-a2)", padding: "10px", borderRadius: "4px" }}>
           <Text size="2" color="orange" weight="bold">
-            ⚠️ Cüzdan Bağlı Değil
+            ⚠️ Wallet Not Connected
           </Text>
           <Text size="1" color="gray">
-            Profilinizi görüntülemek için önce cüzdanınızı bağlayın.
+            Connect your wallet first to view your profile.
           </Text>
         </Flex>
       )}
@@ -150,7 +150,7 @@ export function MyProfile() {
       {/* Loading State */}
       {loading && (
         <Text size="2" color="gray">
-          ⏳ Profiliniz yükleniyor...
+          ⏳ Loading your profile...
         </Text>
       )}
 
@@ -158,13 +158,13 @@ export function MyProfile() {
       {error && (
         <Flex direction="column" gap="2" style={{ background: "var(--red-a2)", padding: "10px", borderRadius: "4px" }}>
           <Text size="2" color="red" weight="bold">
-            ❌ Hata
+            ❌ Error
           </Text>
           <Text size="1" color="red">
             {error}
           </Text>
           <Text size="1" color="gray">
-            💡 Profiliniz bulunamadı. Önce profil oluşturun.
+            💡 Profile not found. Create a profile first.
           </Text>
         </Flex>
       )}
@@ -174,7 +174,7 @@ export function MyProfile() {
         <Flex direction="column" gap="3" style={{ background: "var(--green-a2)", padding: "15px", borderRadius: "8px" }}>
           <Flex justify="between" align="center">
             <Text size="4" weight="bold">
-              ✅ Profilim
+              ✅ My Profile
             </Text>
             <Button
               onClick={() => refetch()}
@@ -183,7 +183,7 @@ export function MyProfile() {
               disabled={isLoading}
               style={{ cursor: isLoading ? "wait" : "pointer" }}
             >
-              {isLoading ? "⏳" : "🔄 Puanı Yenile"}
+              {isLoading ? "⏳" : "🔄 Refresh Score"}
             </Button>
           </Flex>
 
@@ -191,7 +191,7 @@ export function MyProfile() {
           {username && (
             <Flex direction="column" gap="1">
               <Text size="2" color="gray">
-                Kullanıcı Adı:
+                Username:
               </Text>
               <Text size="5" weight="bold">
                 @{username}
@@ -199,10 +199,10 @@ export function MyProfile() {
             </Flex>
           )}
 
-          {/* Trust Score - Büyük ve belirgin */}
+          {/* Trust Score - Large and prominent */}
           <Flex direction="column" gap="1">
             <Text size="2" color="gray">
-              Güven Puanı:
+              Trust Score:
             </Text>
             <Text size="8" weight="bold" style={{ color: getTrustScoreColor(Number(trustScore)) }}>
               {trustScore} / 100
@@ -212,7 +212,7 @@ export function MyProfile() {
             </Text>
           </Flex>
 
-          {/* Reputation Kartlarını Görüntüle */}
+          {/* View Reputation Cards */}
           <Button
             onClick={() => {
               setShowCards(!showCards);
@@ -221,17 +221,17 @@ export function MyProfile() {
             variant={showCards ? "soft" : "solid"}
             style={{ cursor: "pointer" }}
           >
-            {showCards ? "📋 Kartları Gizle" : "📋 Reputation Kartlarımı Görüntüle"}
+            {showCards ? "📋 Hide Cards" : "📋 View My Reputation Cards"}
           </Button>
         </Flex>
       )}
 
-      {/* Reputation Cards - Profil altında göster */}
+      {/* Reputation Cards - Show below profile */}
       {showCards && ownerAddress && (
         <Flex direction="column" gap="3" style={{ marginTop: "15px", padding: "15px", background: "var(--gray-a2)", borderRadius: "8px" }}>
           <Flex justify="between" align="center">
             <Text size="4" weight="bold">
-              📋 Reputation Kartlarım
+              📋 My Reputation Cards
             </Text>
             <Button
               onClick={() => refetchCards()}
@@ -240,12 +240,12 @@ export function MyProfile() {
               disabled={cardsLoading}
               style={{ cursor: "pointer" }}
             >
-              🔄 Yenile
+              🔄 Refresh
             </Button>
           </Flex>
 
           <Text size="2" color="gray">
-            Aldığınız tüm puanlama kartları
+            All rating cards you've received
           </Text>
 
           {cardsLoading && (
@@ -278,9 +278,26 @@ export function MyProfile() {
                 const objectId = card.data?.objectId;
 
                 return (
-                  <Card key={objectId} style={{ padding: "15px" }}>
+                  <Card 
+                    key={objectId} 
+                    style={{ 
+                      padding: "15px",
+                      transition: "all 0.3s ease",
+                      border: "1px solid var(--gray-a4)",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                      e.currentTarget.style.boxShadow = "0 8px 16px var(--gray-a5)";
+                      e.currentTarget.style.borderColor = "var(--green-a7)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.boxShadow = "none";
+                      e.currentTarget.style.borderColor = "var(--gray-a4)";
+                    }}
+                  >
                     <Flex direction="column" gap="2">
-                      {/* Puan */}
+                      {/* Score */}
                       <Flex align="center" gap="2">
                         <Text size="6" weight="bold" style={{ color: getCardScoreColor(Number(scoreGiven)) }}>
                           {scoreGiven} ⭐
@@ -290,17 +307,17 @@ export function MyProfile() {
                         </Text>
                       </Flex>
 
-                      {/* Yorum */}
+                      {/* Comment */}
                       <Flex direction="column" gap="1">
                         <Text size="2" weight="bold" color="gray">
-                          Yorum:
+                          Comment:
                         </Text>
                         <Text size="2" style={{ fontStyle: "italic" }}>
                           "{comment}"
                         </Text>
                       </Flex>
 
-                      {/* Silinemeyen Badge */}
+                      {/* Permanent Badge */}
                       <Flex align="center" gap="1" style={{ marginTop: "5px" }}>
                         <Text size="1" weight="bold" style={{ 
                           background: "var(--red-a3)", 
@@ -308,10 +325,10 @@ export function MyProfile() {
                           borderRadius: "4px",
                           color: "var(--red-11)"
                         }}>
-                          🔒 SİLİNEMEZ
+                          🔒 PERMANENT
                         </Text>
                         <Text size="1" color="gray">
-                          Bu kart kalıcıdır
+                          This card is permanent
                         </Text>
                       </Flex>
                     </Flex>
@@ -327,22 +344,22 @@ export function MyProfile() {
 }
 
 function getTrustScoreColor(score: number): string {
-  if (score >= 80) return "#22c55e"; // Yeşil - İyi
-  if (score >= 60) return "#eab308"; // Sarı - Orta
-  if (score >= 40) return "#f97316"; // Turuncu - Düşük
-  return "#ef4444"; // Kırmızı - Kötü
+  if (score >= 80) return "#22c55e"; // Green - Good
+  if (score >= 60) return "#eab308"; // Yellow - Medium
+  if (score >= 40) return "#f97316"; // Orange - Low
+  return "#ef4444"; // Red - Bad
 }
 
 function getTrustScoreLabel(score: number): string {
-  if (score >= 80) return "⭐ Mükemmel güven puanı!";
-  if (score >= 60) return "👍 İyi güven puanı";
-  if (score >= 40) return "⚠️ Orta güven puanı";
-  return "❌ Düşük güven puanı";
+  if (score >= 80) return "⭐ Excellent trust score!";
+  if (score >= 60) return "👍 Good trust score";
+  if (score >= 40) return "⚠️ Medium trust score";
+  return "❌ Low trust score";
 }
 
 function getCardScoreColor(score: number): string {
-  if (score >= 4) return "#22c55e"; // Yeşil - İyi
-  if (score >= 3) return "#eab308"; // Sarı - Orta
-  if (score >= 2) return "#f97316"; // Turuncu - Düşük
-  return "#ef4444"; // Kırmızı - Kötü
+  if (score >= 4) return "#22c55e"; // Green - Good
+  if (score >= 3) return "#eab308"; // Yellow - Medium
+  if (score >= 2) return "#f97316"; // Orange - Low
+  return "#ef4444"; // Red - Bad
 }
