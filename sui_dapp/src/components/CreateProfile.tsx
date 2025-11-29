@@ -3,9 +3,11 @@ import { Transaction } from "@mysten/sui/transactions";
 import { Button, Flex, Text, TextField } from "@radix-ui/themes";
 import { useState } from "react";
 import { PACKAGE_ID, MODULE_NAME, FUNCTIONS, REGISTRY_ID } from "../constants";
+import { useZkLogin } from "../hooks/useZkLogin";
 
 export function CreateProfile() {
   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
+  const { email } = useZkLogin(); // Get email from zkLogin if user logged in with OAuth
   const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +43,7 @@ export function CreateProfile() {
       arguments: [
         tx.object(REGISTRY_ID),
         tx.pure.string(username),
+        tx.pure.string(email || ""), // Pass email from zkLogin, or empty string for wallet users
       ],
     });
 
@@ -68,6 +71,8 @@ export function CreateProfile() {
             setError(`Username already taken! Try a different one.`);
           } else if (errorMsg.includes("MoveAbort") && errorMsg.includes("2)")) {
             setError(`This wallet already has a profile! Each wallet can only create 1 profile.`);
+          } else if (errorMsg.includes("MoveAbort") && errorMsg.includes("4)")) {
+            setError(`This email already has a profile! Each email can only create 1 profile.`);
           } else {
             setError(errorMsg || "Failed to create profile");
           }
@@ -86,6 +91,26 @@ export function CreateProfile() {
       <Text size="2" color="gray">
         Initial trust score: 100 points
       </Text>
+
+      {email && (
+        <Flex 
+          direction="column" 
+          gap="1" 
+          style={{ 
+            background: "var(--blue-a3)", 
+            padding: "10px", 
+            borderRadius: "6px",
+            border: "1px solid var(--blue-6)"
+          }}
+        >
+          <Text size="2" weight="bold" color="blue">
+            🔐 Authenticated with Email
+          </Text>
+          <Text size="2" style={{ fontFamily: "monospace" }}>
+            {email}
+          </Text>
+        </Flex>
+      )}
 
       <Flex direction="column" gap="2">
         <Text size="2" weight="bold">

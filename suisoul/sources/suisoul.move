@@ -10,6 +10,7 @@ module suisoul::trust_system {
         usernames: Table<String, address>,
         username_list: vector<String>,
         wallet_profiles: Table<address, address>, // wallet -> profile_id mapping
+        email_profiles: Table<String, address>, // email -> profile_id mapping (zkLogin için)
         admin_address: address, // İlk profil oluşturan kişi admin olur
     }
 
@@ -18,6 +19,7 @@ module suisoul::trust_system {
         username: String,
         trust_score: u64,
         owner: address,
+        email: String, // zkLogin email (opsiyonel, boş string olabilir)
     }
 
     public struct ReputationCard has key {
@@ -32,7 +34,8 @@ module suisoul::trust_system {
 
     public entry fun create_profile(
         registry: &mut UsernameRegistry,
-        username: String, 
+        username: String,
+        email: String, // zkLogin email (boş string olabilir normal wallet için)
         ctx: &mut TxContext
     ) {
         let sender = tx_context::sender(ctx);
@@ -42,6 +45,11 @@ module suisoul::trust_system {
         
         // Username benzersizlik kontrolü
         assert!(!table::contains(&registry.usernames, username), 0); // Error code: 0 = Username already taken
+        
+        // Eğer email varsa (zkLogin kullanıyorsa), o email ile kayıtlı profil olmamalı
+        if (std::string::length(&email) > 0) {
+            assert!(!table::contains(&registry.email_profiles, email), 4); // Error code: 4 = Email already has a profile
+        };
         
         // Eğer bu ilk profil ise (admin_address boş ise), bu kişiyi admin yap
         if (registry.admin_address == @0x0) {
@@ -56,10 +64,16 @@ module suisoul::trust_system {
             username,
             trust_score: 100,
             owner: sender,
+            email,
         };
         
         // Wallet'ı kaydet
         table::add(&mut registry.wallet_profiles, sender, profile_address);
+        
+        // Email varsa kaydet
+        if (std::string::length(&email) > 0) {
+            table::add(&mut registry.email_profiles, email, profile_address);
+        };
         
         // Username'i kaydet
         table::add(&mut registry.usernames, profile.username, profile_address);
@@ -136,6 +150,7 @@ module suisoul::trust_system {
             usernames: table::new(ctx),
             username_list: vector::empty(),
             wallet_profiles: table::new(ctx),
+            email_profiles: table::new(ctx),
             admin_address: @0x0, // Başlangıçta admin yok, ilk profil oluşturan admin olacak
         });
     }

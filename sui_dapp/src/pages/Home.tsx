@@ -45,9 +45,16 @@ export function Home() {
               </Link>
             </>
           ) : (
-            <Card>
-              <Text size="3">👆 Connect your wallet to get started</Text>
-            </Card>
+            <>
+              <Link to="/login">
+                <Button size="4" style={{ cursor: "pointer" }}>
+                  🔐 Login with Email →
+                </Button>
+              </Link>
+              <Card>
+                <Text size="3">or connect wallet from navbar</Text>
+              </Card>
+            </>
           )}
         </Flex>
       </Flex>
