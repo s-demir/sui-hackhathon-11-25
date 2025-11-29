@@ -6,6 +6,7 @@ import { RateUser } from "./components/RateUser";
 import { ViewProfile } from "./components/ViewProfile";
 import { ReputationCards } from "./components/ReputationCards";
 import { ProfileList } from "./components/ProfileList";
+import { UserList } from "./components/UserList";
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
         >
           <OwnedObjects />
           <CreateProfile />
+          <UserList />
           <ProfileList />
           <RateUser />
           <ViewProfile />

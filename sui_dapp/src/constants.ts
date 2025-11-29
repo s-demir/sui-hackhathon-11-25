@@ -6,16 +6,16 @@
  */
 
 // Package ID - Smart contract'ın blockchain'deki adresi
-export const PACKAGE_ID = "0x13290b874780b3e4383d1e29025d83e0841ebf7346d7728bd8e10cdd908c6839";
+export const PACKAGE_ID = "0x1dd2e57d568ab57ad2782eb992fd4fe0da1eb1259e8a829bd746ee839f999b05";
 
 // Module ismi - Move dosyasındaki "module suisoul::trust_system"
 export const MODULE_NAME = "trust_system";
 
 // AdminCap Object ID - Sadece admin işlemleri için (af görevi onaylama)
-export const ADMIN_CAP_ID = "0x6c85cc65a3a10b62e4e29d37c357d5376919e2e065039f44b43fda6361bae468";
+export const ADMIN_CAP_ID = "0x31820a677873875ea52fd716aed079d4a51081d6810b3236fba88c728fd52afb";
 
 // UsernameRegistry Object ID - Username -> Object ID mapping için
-export const REGISTRY_ID = "0x9b612414e5fed9d440df10cf1823244a267d6298289173c39392a54d01851b95";
+export const REGISTRY_ID = "0xd6b2662621517176817ca7bfcdd87bfd8c6059bb6ad2e06e1f0be79c3db843c2";
 
 /**
  * Fonksiyon İsimleri
@@ -25,6 +25,8 @@ export const FUNCTIONS = {
   CREATE_PROFILE: "create_profile",
   RATE_USER: "rate_user",
   COMPLETE_REDEMPTION: "complete_redemption_task",
+  GET_PROFILE_BY_USERNAME: "get_profile_by_username",
+  GET_ALL_USERNAMES: "get_all_usernames",
 } as const;
 
 /**

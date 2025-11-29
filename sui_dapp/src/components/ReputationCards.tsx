@@ -48,14 +48,16 @@ export function ReputationCards() {
         Bir kullanıcının aldığı tüm puanlama kartlarını görüntüleyin. Bu kartlar silinemeyen SBT'lerdir.
       </Text>
 
-      {/* Address Input */}
       <Flex direction="column" gap="2">
         <Text size="2" weight="bold">
-          Kullanıcı Adresi:
+          Kullanıcı Cüzdan Adresi:
+        </Text>
+        <Text size="1" color="gray">
+          💡 İpucu: ViewProfile'dan "owner" adresini kopyalayıp buraya yapıştırın
         </Text>
         <Flex gap="2">
           <TextField.Root
-            placeholder="0x..."
+            placeholder="0x... (cüzdan adresi)"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             disabled={isLoading}
@@ -66,11 +68,10 @@ export function ReputationCards() {
             disabled={isLoading || !address.trim()}
             style={{ cursor: "pointer" }}
           >
-            {isLoading ? "Yükleniyor..." : "Ara"}
+            {isLoading ? "Yükleniyor..." : "🔍 Ara"}
           </Button>
         </Flex>
         
-        {/* Kendi Kartlarımı Göster Butonu */}
         {currentAccount && (
           <Button
             onClick={handleShowMyCards}
