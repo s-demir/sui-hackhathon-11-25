@@ -13,8 +13,12 @@ export default function AuthCallback() {
         // Get JWT from URL (Google uses id_token in hash, 42 uses code in query)
         const hash = window.location.hash.substring(1);
         const query = new URLSearchParams(window.location.search);
-        
-        const idToken = new URLSearchParams(hash).get('id_token');
+
+        // Google id_token hem hash hem query parametrelerde olabilir
+        let idToken = new URLSearchParams(hash).get('id_token');
+        if (!idToken) {
+          idToken = query.get('id_token');
+        }
         const code = query.get('code');
 
         if (idToken) {
@@ -28,7 +32,7 @@ export default function AuthCallback() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ code }),
           });
-          
+
           const data = await response.json();
           if (data.jwt) {
             await handleCallback(data.jwt);

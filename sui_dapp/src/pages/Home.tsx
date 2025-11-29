@@ -1,9 +1,16 @@
 import { Container, Heading, Text, Button, Flex, Card } from "@radix-ui/themes";
+import { ConnectButton } from "@mysten/dapp-kit";
 import { Link } from "react-router-dom";
 import { useCurrentAccount, useSuiClientQuery } from "@mysten/dapp-kit";
 import { REGISTRY_ID } from "../constants";
 
 export function Home() {
+    // Wallet bağlantı fonksiyonu
+    const handleWalletConnect = () => {
+      // Mysten dapp-kit ile bağlantı için genellikle Navbar'da ConnectButton kullanılıyor
+      // Home'da doğrudan bağlantı için window.dispatchEvent ile Navbar'daki ConnectButton'u tetikleyebiliriz
+      window.dispatchEvent(new Event('open_wallet_modal'));
+    }
   const account = useCurrentAccount();
 
   // Fetch registry data for stats
@@ -27,10 +34,10 @@ export function Home() {
           Build Trust on the Blockchain
         </Heading>
         <Text size="5" align="center" color="gray" style={{ maxWidth: "600px" }}>
-          SuiSoul is a decentralized reputation system where your trust score is permanently recorded on Sui Network
+          ftSui is a decentralized reputation system where your trust score is permanently recorded on ftSui Network
         </Text>
         
-        <Flex gap="4" mt="4">
+        <Flex gap="4" mt="4" wrap="wrap" justify="center">
           {account ? (
             <>
               <Link to="/dashboard">
@@ -46,14 +53,66 @@ export function Home() {
             </>
           ) : (
             <>
-              <Link to="/login">
-                <Button size="4" style={{ cursor: "pointer" }}>
-                  🔐 Login with Email →
-                </Button>
-              </Link>
-              <Card>
-                <Text size="3">or connect wallet from navbar</Text>
-              </Card>
+              <Button 
+                size="4"
+                style={{
+                  cursor: "pointer",
+                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  color: "white",
+                  minWidth: "300px",
+                  minHeight: "60px",
+                  padding: "0 40px",
+                  fontSize: "20px",
+                  fontWeight: 700,
+                  border: "none",
+                  borderRadius: "16px",
+                  boxShadow: "0 4px 15px rgba(102, 126, 234, 0.4)",
+                  transition: "all 0.3s",
+                  marginRight: "16px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = "0 6px 20px rgba(102, 126, 234, 0.6)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 4px 15px rgba(102, 126, 234, 0.4)";
+                }}
+                onClick={() => window.location.href = '/login'}
+              >
+                <Flex align="center" gap="2">
+                  <Text size="5">🔐</Text>
+                  <Text>Login with Email</Text>
+                </Flex>
+              </Button>
+              <ConnectButton
+                style={{
+                  background: "linear-gradient(135deg, #232526 0%, #414345 100%)",
+                  color: "white",
+                  minWidth: "300px",
+                  minHeight: "60px",
+                  padding: "0 40px",
+                  fontSize: "20px",
+                  fontWeight: 700,
+                  border: "none",
+                  borderRadius: "16px",
+                  boxShadow: "0 4px 15px rgba(102, 126, 234, 0.4)",
+                  transition: "all 0.3s",
+                  marginLeft: "16px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}
+                connectText={
+                  <Flex align="center" gap="2" style={{ height: "60px", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ fontSize: "28px", marginRight: "8px", filter: "none", display: "flex", alignItems: "center" }}>👛</span>
+                    <span style={{ color: "#fff", fontWeight: 700, fontSize: "20px", letterSpacing: "0.5px", filter: "none", display: "flex", alignItems: "center" }}>Connect Wallet</span>
+                  </Flex>
+                }
+              />
             </>
           )}
         </Flex>

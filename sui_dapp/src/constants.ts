@@ -8,7 +8,7 @@
 // Package ID - Smart contract'ın blockchain'deki adresi
 export const PACKAGE_ID = "0xd505c23e1bea4a68c66298d0c3ef139d35dd1412ed4081ed0a22ccf755fd570b";
 
-// Module ismi - Move dosyasındaki "module suisoul::trust_system"
+// Module ismi - Move dosyasındaki "module ftsui::trust_system"
 export const MODULE_NAME = "trust_system";
 
 // AdminCap Object ID - Sadece admin işlemleri için (af görevi onaylama)

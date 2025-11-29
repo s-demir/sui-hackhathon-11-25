@@ -1,10 +1,11 @@
 import { ConnectButton, useCurrentAccount, useSuiClient, useDisconnectWallet } from "@mysten/dapp-kit";
-import { Box, Flex, Heading, Button, Text, DropdownMenu } from "@radix-ui/themes";
+import { Box, Flex, Heading, Button, Text, DropdownMenu, Badge } from "@radix-ui/themes";
 import { Link, useLocation } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 import { useSuiClientQuery } from "@mysten/dapp-kit";
 import { REGISTRY_ID, STRUCT_TYPES } from "../constants";
 import { useState, useEffect } from "react";
+import { useZkLogin } from "../hooks/useZkLogin";
 
 export function Navbar() {
   const { theme, toggleTheme } = useTheme();
@@ -12,6 +13,7 @@ export function Navbar() {
   const account = useCurrentAccount();
   const suiClient = useSuiClient();
   const { mutate: disconnect } = useDisconnectWallet();
+  const { email, provider, logout: zkLogout } = useZkLogin();
   const [userProfile, setUserProfile] = useState<{ username: string; profileId: string } | null>(null);
   const [copiedId, setCopiedId] = useState(false);
 
@@ -129,7 +131,7 @@ export function Navbar() {
       <Flex align="center" gap="6">
         <Link to="/" style={{ textDecoration: "none" }}>
           <Heading size="5" style={{ cursor: "pointer" }}>
-            🎯 SuiSoul
+            🎯 ftSui
           </Heading>
         </Link>
 
@@ -163,11 +165,11 @@ export function Navbar() {
             </Button>
           </Link>
 
-          {isAdmin && (
+          {account && isAdmin && (
             <Link to="/admin" style={{ textDecoration: "none" }}>
               <Button
                 variant={isActive("/admin") ? "solid" : "ghost"}
-                color="red"
+                size="3"
                 style={{ cursor: "pointer" }}
               >
                 🔒 Admin
@@ -184,8 +186,15 @@ export function Navbar() {
           onClick={toggleTheme}
           style={{ cursor: "pointer" }}
         >
-          {theme === "light" ? "🌙" : "☀️"}
+          {theme === "dark" ? "🌙" : "☀️"}
         </Button>
+
+        {/* zkLogin Status Badge */}
+        {email && (
+          <Badge color="green" size="2" style={{ padding: "6px 12px" }}>
+            {provider === '42' ? '🎓' : '🌐'} {email}
+          </Badge>
+        )}
 
         {/* User Info with Actions */}
         {account && userProfile ? (
@@ -224,6 +233,17 @@ export function Navbar() {
                 </Flex>
               </DropdownMenu.Item>
               <DropdownMenu.Separator />
+              {email && (
+                <>
+                  <DropdownMenu.Item color="blue" onClick={zkLogout}>
+                    <Flex align="center" gap="2">
+                      <Text size="3">🔓</Text>
+                      <Text size="2">Logout from {provider === '42' ? '42 École' : 'Google'}</Text>
+                    </Flex>
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Separator />
+                </>
+              )}
               <DropdownMenu.Item color="red" onClick={() => disconnect()}>
                 <Flex align="center" gap="2">
                   <Text size="3">🚪</Text>
@@ -232,12 +252,34 @@ export function Navbar() {
               </DropdownMenu.Item>
             </DropdownMenu.Content>
           </DropdownMenu.Root>
-        ) : null}
+        ) : (
+          <>
+            {/* Login Button - Show when not connected */}
+            {!account && (
+              <Link to="/login" style={{ textDecoration: "none" }}>
+                <Button 
+                  size="3" 
+                  variant="solid" 
+                  style={{ 
+                    cursor: "pointer",
+                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    border: "none",
+                  }}
+                  title="Login with Google, 42 École, or connect wallet"
+                >
+                  🔐 Login
+                </Button>
+              </Link>
+            )}
+          </>
+        )}
 
-        {/* Wallet Connect - Hide when logged in */}
-        <Box style={{ display: account && userProfile ? "none" : "block" }}>
-          <ConnectButton />
-        </Box>
+        {/* Wallet Connect - Show when no profile */}
+        {!userProfile && !email && (
+          <Box>
+            <ConnectButton />
+          </Box>
+        )}
       </Flex>
     </Flex>
   );

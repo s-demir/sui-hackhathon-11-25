@@ -2,7 +2,76 @@ import { Button, Container, Heading, Text, Flex, Card } from '@radix-ui/themes';
 import { useZkLogin } from '../hooks/useZkLogin';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
+// Sağ alt köşede açılır/kapanır info kutusu bileşeni
+function InfoCornerBox() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{
+      position: 'fixed',
+      right: 24,
+      bottom: 24,
+      zIndex: 100,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'flex-end',
+    }}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        style={{
+          background: '#e0e7ff',
+          border: 'none',
+          borderRadius: '50%',
+          width: 36,
+          height: 36,
+          boxShadow: '0 2px 8px rgba(37,99,235,0.07)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          transition: 'box-shadow 0.2s',
+        }}
+        aria-label="Show info"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#3b82f6"><circle cx="12" cy="12" r="10" fill="#e0e7ff"/><text x="12" y="16" textAnchor="middle" fontSize="14" fontWeight="bold" fill="#3b82f6">i</text></svg>
+      </button>
+      {open && (
+        <div style={{
+          marginTop: 10,
+          minWidth: 320,
+          maxWidth: 380,
+          background: 'rgba(30,41,59,0.97)',
+          border: '1px solid #334155',
+          borderRadius: '10px',
+          boxShadow: '0 2px 12px rgba(37,99,235,0.13)',
+          padding: '18px 20px 14px 20px',
+          fontFamily: 'Inter, Arial, sans-serif',
+          color: '#e0e7ef',
+          fontSize: 14,
+          opacity: 0.97,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+            <span style={{ fontWeight: 600, fontSize: 15, color: '#3b82f6', letterSpacing: 0.05 }}>OAuth Server Required</span>
+          </div>
+          <div style={{ lineHeight: 1.7 }}>
+            To use Google or 42 École login, start the OAuth server:<br /><br />
+            <strong>Install dependencies:</strong><br />
+            <code style={{ background: '#1e293b', color: '#60a5fa', borderRadius: 4, padding: '2px 6px' }}>cd oauth-server &amp;&amp; npm install</code><br /><br />
+            <strong>Configure credentials:</strong><br />
+            Edit <code style={{ background: '#1e293b', color: '#60a5fa', borderRadius: 4, padding: '2px 6px' }}>oauth-server/.env</code> file<br />
+            • Google: <a href="https://console.cloud.google.com/" target="_blank" style={{ color: '#60a5fa', textDecoration: 'underline' }}>console.cloud.google.com</a><br />
+            • 42 École: <a href="https://profile.intra.42.fr/oauth/applications" target="_blank" style={{ color: '#60a5fa', textDecoration: 'underline' }}>profile.intra.42.fr</a><br /><br />
+            <strong>Start server:</strong><br />
+            <code style={{ background: '#1e293b', color: '#60a5fa', borderRadius: 4, padding: '2px 6px' }}>npm start</code> (runs on port 3001)<br /><br />
+            <strong>💡 Quick Start:</strong><br />
+            Use <strong>Wallet Connect</strong> from the navbar
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Login() {
   const { loginWithGoogle, loginWith42, isLoading, error } = useZkLogin();
@@ -12,15 +81,23 @@ export default function Login() {
   useEffect(() => {
     // If already connected with wallet, redirect
     if (currentAccount) {
-      navigate('/create-profile');
+      navigate('/dashboard');
     }
   }, [currentAccount, navigate]);
+
+  const handleGoogleLogin = () => {
+    loginWithGoogle();
+  };
+
+  const handleFortyTwoLogin = () => {
+    loginWith42();
+  };
 
   return (
     <Container size="2" style={{ marginTop: '60px' }}>
       <Flex direction="column" gap="6" align="center">
         <Heading size="8" style={{ textAlign: 'center' }}>
-          Welcome to SuiSoul
+          Welcome to ftSui
         </Heading>
         
         <Text size="4" color="gray" style={{ textAlign: 'center', maxWidth: '500px' }}>
@@ -33,40 +110,83 @@ export default function Login() {
           </Card>
         )}
 
-        <Card style={{ width: '100%', maxWidth: '400px', padding: '30px' }}>
-          <Flex direction="column" gap="4">
-            <Heading size="5" style={{ textAlign: 'center', marginBottom: '10px' }}>
-              Choose Login Method
-            </Heading>
+        <Card style={{ 
+          width: '100%', 
+          maxWidth: '500px', 
+          padding: '40px',
+          background: 'var(--gray-a2)',
+          border: '2px solid var(--gray-a4)',
+        }}>
+          <Flex direction="column" gap="5">
+            <Flex direction="column" gap="2" align="center">
+              <Heading size="6" style={{ textAlign: 'center' }}>
+                Choose Login Method
+              </Heading>
+              <Text size="2" color="gray" style={{ textAlign: 'center' }}>
+                Login with email or connect your wallet
+              </Text>
+            </Flex>
 
             <Button
-              size="3"
-              variant="soft"
+              size="4"
+              variant="surface"
               style={{ 
                 width: '100%',
                 cursor: 'pointer',
-                background: 'var(--blue-3)',
-                color: 'var(--blue-11)',
+                background: 'white',
+                color: '#4285F4',
+                border: '2px solid #4285F4',
+                padding: '20px',
+                fontSize: '16px',
+                fontWeight: 600,
+                transition: 'all 0.2s',
               }}
-              onClick={loginWithGoogle}
+              onClick={handleGoogleLogin}
               disabled={isLoading}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#4285F4';
+                e.currentTarget.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'white';
+                e.currentTarget.style.color = '#4285F4';
+              }}
             >
-              {isLoading ? '⏳ Loading...' : '🌐 Continue with Google'}
+              <Flex align="center" justify="center" gap="3">
+                <Text size="5">🌐</Text>
+                <Text>{isLoading ? 'Connecting...' : 'Continue with Google'}</Text>
+              </Flex>
             </Button>
 
             <Button
-              size="3"
-              variant="soft"
+              size="4"
+              variant="surface"
               style={{ 
                 width: '100%',
                 cursor: 'pointer',
-                background: 'var(--purple-3)',
-                color: 'var(--purple-11)',
+                background: 'white',
+                color: '#00BABC',
+                border: '2px solid #00BABC',
+                padding: '20px',
+                fontSize: '16px',
+                fontWeight: 600,
+                transition: 'all 0.2s',
               }}
-              onClick={loginWith42}
+              onClick={handleFortyTwoLogin}
               disabled={isLoading}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#00BABC';
+                e.currentTarget.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'white';
+                e.currentTarget.style.color = '#00BABC';
+              }}
             >
-              {isLoading ? '⏳ Loading...' : '🎓 Continue with 42 École'}
+              <Flex align="center" justify="center" gap="3">
+                <Text size="5">🎓</Text>
+                <Text>{isLoading ? 'Connecting...' : 'Continue with 42 École'}</Text>
+              </Flex>
             </Button>
 
             <div style={{ 
@@ -103,16 +223,8 @@ export default function Login() {
           </Flex>
         </Card>
 
-        <Card style={{ maxWidth: '500px', background: 'var(--gray-2)' }}>
-          <Flex direction="column" gap="2">
-            <Text size="2" weight="bold">ℹ️ Important:</Text>
-            <Text size="2" color="gray">
-              • One email = One profile<br />
-              • One wallet = One profile<br />
-              • Choose your login method carefully
-            </Text>
-          </Flex>
-        </Card>
+        {/* Sağ alt köşede açılır/kapanır info kutusu */}
+        <InfoCornerBox />
       </Flex>
     </Container>
   );

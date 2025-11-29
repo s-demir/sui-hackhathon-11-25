@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
-import { generateNonce, generateRandomness } from '@mysten/zklogin';
+// importlar kaldırıldı
 import { jwtToAddress } from '@mysten/zklogin';
 
 export interface ZkLoginState {
@@ -23,31 +22,20 @@ export const useZkLogin = () => {
   // Google OAuth login
   const loginWithGoogle = async () => {
     try {
-      setState({ ...state, isLoading: true, error: null });
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
 
-      // Generate ephemeral keypair
-      const ephemeralKeyPair = new Ed25519Keypair();
-      const randomness = generateRandomness();
-      const nonce = generateNonce(
-        ephemeralKeyPair.getPublicKey(),
-        BigInt(100), // max epoch
-        randomness
-      );
+      // Generate state for OAuth
+      const state = Math.random().toString(36).substring(7);
+      const nonce = Math.random().toString(36).substring(7);
 
-      // Store ephemeral keypair and randomness
-      sessionStorage.setItem('ephemeralKeyPair', JSON.stringify(ephemeralKeyPair.export()));
-      sessionStorage.setItem('randomness', randomness);
+      // Store state and provider
+      sessionStorage.setItem('oauth_state', state);
+      sessionStorage.setItem('oauth_nonce', nonce);
+      sessionStorage.setItem('provider', 'google');
 
-      // Redirect to Google OAuth
-      const params = new URLSearchParams({
-        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
-        redirect_uri: window.location.origin + '/auth/callback',
-        response_type: 'id_token',
-        scope: 'openid email profile',
-        nonce: nonce,
-      });
-
-      window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+      // Redirect to OAuth backend server
+      const oauthServerUrl = import.meta.env.VITE_OAUTH_SERVER_URL || 'http://localhost:3001';
+      window.location.href = `${oauthServerUrl}/auth/google?state=${state}&nonce=${nonce}`;
     } catch (error) {
       setState({
         ...state,
@@ -60,32 +48,18 @@ export const useZkLogin = () => {
   // 42 École OAuth login
   const loginWith42 = async () => {
     try {
-      setState({ ...state, isLoading: true, error: null });
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
 
-      // Generate ephemeral keypair
-      const ephemeralKeyPair = new Ed25519Keypair();
-      const randomness = generateRandomness();
-      const nonce = generateNonce(
-        ephemeralKeyPair.getPublicKey(),
-        BigInt(100),
-        randomness
-      );
+      // Generate state for OAuth
+      const state = Math.random().toString(36).substring(7);
 
-      // Store ephemeral keypair and randomness
-      sessionStorage.setItem('ephemeralKeyPair', JSON.stringify(ephemeralKeyPair.export()));
-      sessionStorage.setItem('randomness', randomness);
+      // Store state and provider
+      sessionStorage.setItem('oauth_state', state);
       sessionStorage.setItem('provider', '42');
 
-      // Redirect to 42 OAuth
-      const params = new URLSearchParams({
-        client_id: import.meta.env.VITE_42_CLIENT_ID || '',
-        redirect_uri: window.location.origin + '/auth/callback',
-        response_type: 'code',
-        scope: 'public',
-        state: nonce,
-      });
-
-      window.location.href = `https://api.intra.42.fr/oauth/authorize?${params.toString()}`;
+      // Redirect to OAuth backend server
+      const oauthServerUrl = import.meta.env.VITE_OAUTH_SERVER_URL || 'http://localhost:3001';
+      window.location.href = `${oauthServerUrl}/auth/42?state=${state}`;
     } catch (error) {
       setState({
         ...state,
