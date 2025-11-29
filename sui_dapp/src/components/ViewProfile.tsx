@@ -178,9 +178,20 @@ export function ViewProfile() {
       {/* Success State - Profile Data */}
       {data && !error && trustScore !== undefined && (
         <Flex direction="column" gap="3" style={{ background: "var(--green-a2)", padding: "15px", borderRadius: "8px" }}>
-          <Text size="4" weight="bold">
-            ✅ Profil Bulundu
-          </Text>
+          <Flex justify="between" align="center">
+            <Text size="4" weight="bold">
+              ✅ Profil Bulundu
+            </Text>
+            <Button
+              onClick={() => refetch()}
+              size="2"
+              variant="soft"
+              disabled={isLoading}
+              style={{ cursor: isLoading ? "wait" : "pointer" }}
+            >
+              {isLoading ? "⏳" : "🔄 Puanı Yenile"}
+            </Button>
+          </Flex>
 
           {/* Username */}
           {username && (

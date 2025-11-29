@@ -253,6 +253,21 @@ export function RateUser() {
         </Text>
       )}
 
+      {/* Success Message */}
+      {success && (
+        <Flex direction="column" gap="2" style={{ background: "var(--green-a3)", padding: "15px", borderRadius: "8px", border: "2px solid var(--green-9)" }}>
+          <Text size="3" weight="bold" color="green">
+            ✅ Puanlama Başarılı!
+          </Text>
+          <Text size="2">
+            ReputationCard gönderildi ve güven puanı güncellendi.
+          </Text>
+          <Text size="2" weight="bold" color="blue">
+            💡 İpucu: ViewProfile bölümünden "🔄 Puanı Yenile" butonuna basarak güncel puanı görebilirsiniz.
+          </Text>
+        </Flex>
+      )}
+
       {/* Açıklama */}
       <Flex direction="column" gap="1" style={{ marginTop: "10px", background: "var(--gray-a2)", padding: "10px", borderRadius: "4px" }}>
         <Text size="1" weight="bold">
