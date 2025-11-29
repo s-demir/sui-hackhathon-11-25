@@ -10,6 +10,7 @@ module suisoul::trust_system {
         usernames: Table<String, address>,
         username_list: vector<String>,
         wallet_profiles: Table<address, address>, // wallet -> profile_id mapping
+        admin_address: address, // İlk profil oluşturan kişi admin olur
     }
 
     public struct UserProfile has key, store {
@@ -41,6 +42,11 @@ module suisoul::trust_system {
         
         // Username benzersizlik kontrolü
         assert!(!table::contains(&registry.usernames, username), 0); // Error code: 0 = Username already taken
+        
+        // Eğer bu ilk profil ise (admin_address boş ise), bu kişiyi admin yap
+        if (registry.admin_address == @0x0) {
+            registry.admin_address = sender;
+        };
         
         let profile_id = object::new(ctx);
         let profile_address = object::uid_to_address(&profile_id);
@@ -92,10 +98,14 @@ module suisoul::trust_system {
     }
 
     public entry fun complete_redemption_task(
+        registry: &UsernameRegistry,
         _: &AdminCap,
         profile: &mut UserProfile,
-        _ctx: &mut TxContext
+        ctx: &mut TxContext
     ) {
+        // Sadece admin çağırabilir
+        assert!(tx_context::sender(ctx) == registry.admin_address, 3); // Error code: 3 = Not admin
+        
         profile.trust_score = profile.trust_score + 15;
         if (profile.trust_score > 100) { 
             profile.trust_score = 100 
@@ -126,6 +136,7 @@ module suisoul::trust_system {
             usernames: table::new(ctx),
             username_list: vector::empty(),
             wallet_profiles: table::new(ctx),
+            admin_address: @0x0, // Başlangıçta admin yok, ilk profil oluşturan admin olacak
         });
     }
 }

@@ -6,16 +6,16 @@
  */
 
 // Package ID - Smart contract'ın blockchain'deki adresi
-export const PACKAGE_ID = "0xfec0dcda8ab3ebc0e89cf3f4f9d6a3f364d8e6c78eb28f493133a7432be6ae41";
+export const PACKAGE_ID = "0x5065de334637146fc8c68ef8c0e545fd33e955873d3f2bc519d729f69556fd26";
 
 // Module ismi - Move dosyasındaki "module suisoul::trust_system"
 export const MODULE_NAME = "trust_system";
 
 // AdminCap Object ID - Sadece admin işlemleri için (af görevi onaylama)
-export const ADMIN_CAP_ID = "0xe3507c075345a51f7075970c473399feff4f5b82dbc21cec011bf01707b409b8";
+export const ADMIN_CAP_ID = "0xe7533d3eff916cdcad01bcf36e4216072529f777dbd3163b2f4c3c334a4be556";
 
 // UsernameRegistry Object ID - Username -> Object ID mapping için
-export const REGISTRY_ID = "0xe434f0a1a58f721669dc699d21e52bca023dca22737684a321f23667a00bda8a";
+export const REGISTRY_ID = "0xd44560c33a0bfb93d0d3e0c73d32dbdc3a39597b7c11208b1bd3b7815dedb30e";
 
 /**
  * Fonksiyon İsimleri

@@ -1,16 +1,17 @@
 import { useSuiClientQuery, useSuiClient } from "@mysten/dapp-kit";
-import { Button, Flex, Text, TextField } from "@radix-ui/themes";
+import { Button, Flex, Text, TextField, Card } from "@radix-ui/themes";
 import { useState } from "react";
 import { Transaction } from "@mysten/sui/transactions";
-import { PACKAGE_ID, MODULE_NAME, FUNCTIONS, REGISTRY_ID } from "../constants";
+import { PACKAGE_ID, MODULE_NAME, FUNCTIONS, REGISTRY_ID, STRUCT_TYPES } from "../constants";
 
 export function ViewProfile() {
   const suiClient = useSuiClient();
   const [usernameInput, setUsernameInput] = useState("");
-  const [profileId, setProfileId] = useState("");
   const [searchId, setSearchId] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [showCards, setShowCards] = useState(false);
+  const [ownerAddress, setOwnerAddress] = useState("");
 
   const { data, isLoading, error, refetch } = useSuiClientQuery(
     "getObject",
@@ -29,7 +30,7 @@ export function ViewProfile() {
 
   const handleSearchUsername = async () => {
     if (!usernameInput.trim()) {
-      setSearchError("Kullanıcı adı gerekli!");
+      setSearchError("Username is required!");
       return;
     }
 
@@ -59,134 +60,135 @@ export function ViewProfile() {
             .map((b: number) => b.toString(16).padStart(2, "0"))
             .join("");
           const objectId = `0x${objectIdHex}`;
-          setProfileId(objectId);
           setSearchId(objectId);
           setSearchError(null);
         } else {
-          setSearchError("Kullanıcı bulunamadı!");
+          setSearchError("User not found!");
         }
       } else {
-        setSearchError("Kullanıcı bulunamadı!");
+        setSearchError("User not found!");
       }
     } catch (err: any) {
-      console.error("❌ Kullanıcı arama hatası:", err);
-      setSearchError(err.message || "Arama başarısız");
+      console.error("❌ User search error:", err);
+      setSearchError(err.message || "Search failed");
     } finally {
       setSearchLoading(false);
     }
   };
 
-  const handleSearch = () => {
-    if (!profileId.trim()) return;
-    setSearchId(profileId);
-  };
-  
   const profileData = data?.data?.content as any;
   const trustScore = profileData?.fields?.trust_score;
   const username = profileData?.fields?.username;
   const owner = profileData?.fields?.owner;
 
+  // Reputation kartlarını çek
+  const { data: cardsData, isLoading: cardsLoading, refetch: refetchCards } = useSuiClientQuery(
+    "getOwnedObjects",
+    {
+      owner: ownerAddress,
+      filter: {
+        StructType: STRUCT_TYPES.REPUTATION_CARD,
+      },
+      options: {
+        showContent: true,
+        showType: true,
+      },
+    },
+    {
+      enabled: !!ownerAddress && showCards,
+    }
+  );
+
+  const cards = cardsData?.data || [];
+
   return (
-    <Flex direction="column" gap="3" style={{ padding: "20px", border: "1px solid var(--gray-a4)", borderRadius: "8px" }}>
+    <Flex direction="column" gap="3" style={{ padding: "20px", border: "1px solid var(--gray-a4)", borderRadius: "8px" }} data-view-profile>
       <Text size="5" weight="bold">
-        🔍 Profil Görüntüle
+        🔍 Search Profile
       </Text>
       
       <Text size="2" color="gray">
-        Bir UserProfile'ın güven puanını görüntüleyin.
+        Search for a profile by username and view their trust score.
       </Text>
 
-      {/* Username Search */}
+      {/* User Search */}
       <Flex direction="column" gap="2">
         <Text size="2" weight="bold">
-          🔍 Kullanıcı Ara (İsteğe Bağlı):
+          🔍 Search User:
         </Text>
         <Flex gap="2">
           <TextField.Root
-            placeholder="Kullanıcı adını girin..."
+            placeholder="Enter username..."
             value={usernameInput}
             onChange={(e) => setUsernameInput(e.target.value)}
             disabled={isLoading || searchLoading}
             style={{ flex: 1 }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && usernameInput.trim()) {
+                handleSearchUsername();
+              }
+            }}
           />
           <Button
             onClick={handleSearchUsername}
             disabled={isLoading || searchLoading || !usernameInput.trim()}
-            variant="soft"
-          >
-            {searchLoading ? "Arıyor..." : "Ara"}
-          </Button>
-        </Flex>
-        {searchError && (
-          <Text size="1" color="red">
-            ❌ {searchError}
-          </Text>
-        )}
-        <Text size="1" color="gray">
-          💡 İpucu: "Kullanıcılar" listesinden bir kullanıcı adı kopyalayıp buraya yapıştırabilirsiniz
-        </Text>
-      </Flex>
-
-      {/* Profile ID Input */}
-      <Flex direction="column" gap="2">
-        <Text size="2" weight="bold">
-          UserProfile Object ID:
-        </Text>
-        <Flex gap="2">
-          <TextField.Root
-            placeholder="0x..."
-            value={profileId}
-            onChange={(e) => setProfileId(e.target.value)}
-            disabled={isLoading}
-            style={{ flex: 1 }}
-          />
-          <Button
-            onClick={handleSearch}
-            disabled={isLoading || !profileId.trim()}
             style={{ cursor: "pointer" }}
           >
-            {isLoading ? "Yükleniyor..." : "Ara"}
+            {searchLoading ? "Searching..." : "🔍 Search"}
           </Button>
         </Flex>
+      {searchError && (
+        <Text size="1" color="red">
+          ❌ {searchError}
+        </Text>
+      )}
         <Text size="1" color="gray">
-          ℹ️ Yukarıdaki aramayı kullanın veya Object ID'yi manuel girin
+          💡 Tip: Copy a username from the "Users" list and paste it here
         </Text>
       </Flex>
 
       {/* Loading State */}
-      {isLoading && (
+      {(isLoading || searchLoading) && (
         <Text size="2" color="gray">
-          ⏳ Profil yükleniyor...
+          ⏳ Loading profile...
         </Text>
       )}
 
       {/* Error State */}
-      {error && (
+      {(error || searchError) && (
         <Flex direction="column" gap="2" style={{ background: "var(--red-a2)", padding: "10px", borderRadius: "4px" }}>
           <Text size="2" color="red" weight="bold">
-            ❌ Hata
+            ❌ Error
           </Text>
           <Text size="1" color="red">
-            {error.message || "Profil bulunamadı"}
-          </Text>
-          <Text size="1" color="gray">
-            💡 Object ID'nin doğru olduğundan emin olun
+            {searchError || error?.message || "Profile not found"}
           </Text>
         </Flex>
       )}
 
       {/* Success State - Profile Data */}
-      {data && !error && trustScore !== undefined && (
+      {data && !error && !searchError && trustScore !== undefined && (
         <Flex direction="column" gap="3" style={{ background: "var(--green-a2)", padding: "15px", borderRadius: "8px" }}>
-          <Text size="4" weight="bold">
-            ✅ Profil Bulundu
-          </Text>
+          <Flex justify="between" align="center">
+            <Text size="4" weight="bold">
+              ✅ Profile Found
+            </Text>
+            <Button
+              onClick={() => refetch()}
+              size="2"
+              variant="soft"
+              disabled={isLoading}
+              style={{ cursor: isLoading ? "wait" : "pointer" }}
+            >
+              {isLoading ? "⏳" : "🔄 Refresh Score"}
+            </Button>
+          </Flex>
 
           {/* Username */}
           {username && (
             <Flex direction="column" gap="1">
               <Text size="2" color="gray">
-                Kullanıcı Adı:
+                Username:
               </Text>
               <Text size="5" weight="bold">
                 @{username}
@@ -194,10 +196,10 @@ export function ViewProfile() {
             </Flex>
           )}
 
-          {/* Trust Score - Büyük ve belirgin */}
+          {/* Trust Score - Large and prominent */}
           <Flex direction="column" gap="1">
             <Text size="2" color="gray">
-              Güven Puanı:
+              Trust Score:
             </Text>
             <Text size="8" weight="bold" style={{ color: getTrustScoreColor(Number(trustScore)) }}>
               {trustScore} / 100
@@ -207,47 +209,132 @@ export function ViewProfile() {
             </Text>
           </Flex>
 
-          {/* Owner Address */}
-          <Flex direction="column" gap="2">
-            <Text size="2" color="gray">
-              Profil Sahibi (Cüzdan Adresi):
-            </Text>
-            <Flex direction="column" gap="1" style={{ background: "var(--blue-a2)", padding: "10px", borderRadius: "4px" }}>
-              <Text size="1" style={{ wordBreak: "break-all", fontFamily: "monospace" }}>
-                {owner}
-              </Text>
-              <Button
-                onClick={() => {
-                  navigator.clipboard.writeText(owner);
-                  alert("✅ Cüzdan adresi kopyalandı!\n\nBu adresi Reputation Kartları bölümünde kullanarak bu kullanıcının aldığı tüm kartları görebilirsiniz.");
-                }}
-                size="2"
-                variant="soft"
-                style={{ cursor: "pointer" }}
-              >
-                📋 Adresi Kopyala (Kartlarını Görmek İçin)
-              </Button>
-            </Flex>
-          </Flex>
-
-          {/* Object ID */}
-          <Flex direction="column" gap="1">
-            <Text size="2" color="gray">
-              Object ID:
-            </Text>
-            <Text size="1" style={{ wordBreak: "break-all", fontFamily: "monospace" }}>
-              {searchId}
-            </Text>
-          </Flex>
-
-          {/* Yenile Butonu */}
+          {/* Display Reputation Cards */}
           <Button
-            onClick={() => refetch()}
-            variant="soft"
+            onClick={() => {
+              setOwnerAddress(owner);
+              setShowCards(!showCards);
+            }}
+            size="3"
+            variant={showCards ? "soft" : "solid"}
             style={{ cursor: "pointer" }}
           >
-            🔄 Yenile
+            {showCards ? "📋 Hide Cards" : "📋 View Reputation Cards"}
           </Button>
+        </Flex>
+      )}
+
+      {/* Reputation Cards - Show below profile */}
+      {showCards && ownerAddress && (
+        <Flex direction="column" gap="3" style={{ marginTop: "15px", padding: "15px", background: "var(--gray-a2)", borderRadius: "8px" }}>
+          <Flex justify="between" align="center">
+            <Text size="4" weight="bold">
+              📋 Reputation Cards
+            </Text>
+            <Button
+              onClick={() => refetchCards()}
+              variant="soft"
+              size="2"
+              disabled={cardsLoading}
+              style={{ cursor: "pointer" }}
+            >
+              🔄 Refresh
+            </Button>
+          </Flex>
+
+          <Text size="2" color="gray">
+            All rating cards received by @{username}
+          </Text>
+
+          {cardsLoading && (
+            <Text size="2" color="gray">
+              ⏳ Loading cards...
+            </Text>
+          )}
+
+          {!cardsLoading && cards.length === 0 && (
+            <Flex direction="column" gap="2" style={{ background: "var(--gray-a3)", padding: "15px", borderRadius: "4px" }}>
+              <Text size="2" weight="bold">
+                📭 No cards yet
+              </Text>
+              <Text size="1" color="gray">
+                This user has not been rated yet.
+              </Text>
+            </Flex>
+          )}
+
+          {!cardsLoading && cards.length > 0 && (
+            <Flex direction="column" gap="2">
+              <Text size="2" weight="bold">
+                Total {cards.length} cards
+              </Text>
+              {cards.map((card: any) => {
+                const content = card.data?.content;
+                const fields = content?.fields;
+                const scoreGiven = fields?.score_given;
+                const comment = fields?.comment;
+                const objectId = card.data?.objectId;
+
+                return (
+                  <Card 
+                    key={objectId} 
+                    style={{ 
+                      padding: "15px",
+                      transition: "all 0.3s ease",
+                      border: "1px solid var(--gray-a4)",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                      e.currentTarget.style.boxShadow = "0 8px 16px var(--gray-a5)";
+                      e.currentTarget.style.borderColor = "var(--blue-a7)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.boxShadow = "none";
+                      e.currentTarget.style.borderColor = "var(--gray-a4)";
+                    }}
+                  >
+                    <Flex direction="column" gap="2">
+                      {/* Score */}
+                      <Flex align="center" gap="2">
+                        <Text size="6" weight="bold" style={{ color: getCardScoreColor(Number(scoreGiven)) }}>
+                          {scoreGiven} ⭐
+                        </Text>
+                        <Text size="2" color="gray">
+                          / 5
+                        </Text>
+                      </Flex>
+
+                      {/* Comment */}
+                      <Flex direction="column" gap="1">
+                        <Text size="2" weight="bold" color="gray">
+                          Comment:
+                        </Text>
+                        <Text size="2" style={{ fontStyle: "italic" }}>
+                          "{comment}"
+                        </Text>
+                      </Flex>
+
+                      {/* Permanent Badge */}
+                      <Flex align="center" gap="1" style={{ marginTop: "5px" }}>
+                        <Text size="1" weight="bold" style={{ 
+                          background: "var(--red-a3)", 
+                          padding: "2px 8px", 
+                          borderRadius: "4px",
+                          color: "var(--red-11)"
+                        }}>
+                          🔒 PERMANENT
+                        </Text>
+                        <Text size="1" color="gray">
+                          This card is permanent
+        </Text>
+                      </Flex>
+                    </Flex>
+                  </Card>
+                );
+              })}
+            </Flex>
+          )}
         </Flex>
       )}
 
@@ -257,15 +344,22 @@ export function ViewProfile() {
 }
 
 function getTrustScoreColor(score: number): string {
-  if (score >= 80) return "#22c55e"; // Yeşil - İyi
-  if (score >= 60) return "#eab308"; // Sarı - Orta
-  if (score >= 40) return "#f97316"; // Turuncu - Düşük
-  return "#ef4444"; // Kırmızı - Kötü
+  if (score >= 80) return "#22c55e"; // Green - Good
+  if (score >= 60) return "#eab308"; // Yellow - Medium
+  if (score >= 40) return "#f97316"; // Orange - Low
+  return "#ef4444"; // Red - Bad
 }
 
 function getTrustScoreLabel(score: number): string {
-  if (score >= 80) return "⭐ Mükemmel güven puanı!";
-  if (score >= 60) return "👍 İyi güven puanı";
-  if (score >= 40) return "⚠️ Orta güven puanı";
-  return "❌ Düşük güven puanı";
+  if (score >= 80) return "⭐ Excellent trust score!";
+  if (score >= 60) return "👍 Good trust score";
+  if (score >= 40) return "⚠️ Medium trust score";
+  return "❌ Low trust score";
+}
+
+function getCardScoreColor(score: number): string {
+  if (score >= 4) return "#22c55e"; // Green - Good
+  if (score >= 3) return "#eab308"; // Yellow - Medium
+  if (score >= 2) return "#f97316"; // Orange - Low
+  return "#ef4444"; // Red - Bad
 }
