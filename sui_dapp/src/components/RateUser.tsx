@@ -1,17 +1,68 @@
-import { useSignAndExecuteTransaction } from "@mysten/dapp-kit";
+import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { Button, Flex, Text, TextField, TextArea } from "@radix-ui/themes";
 import { useState } from "react";
-import { PACKAGE_ID, MODULE_NAME, FUNCTIONS } from "../constants";
+import { PACKAGE_ID, MODULE_NAME, FUNCTIONS, REGISTRY_ID } from "../constants";
 
 export function RateUser() {
   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
+  const suiClient = useSuiClient();
+  const [username, setUsername] = useState("");
   const [profileId, setProfileId] = useState("");
   const [score, setScore] = useState<number>(5);
   const [comment, setComment] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  const handleSearchUsername = async () => {
+    if (!username.trim()) {
+      setError("Kullanıcı adı gerekli!");
+      return;
+    }
+
+    setSearchLoading(true);
+    setError(null);
+
+    try {
+      const tx = new Transaction();
+      tx.moveCall({
+        target: `${PACKAGE_ID}::${MODULE_NAME}::${FUNCTIONS.GET_PROFILE_BY_USERNAME}`,
+        arguments: [
+          tx.object(REGISTRY_ID),
+          tx.pure.string(username),
+        ],
+      });
+
+      const result = await suiClient.devInspectTransactionBlock({
+        transactionBlock: tx,
+        sender: "0x0000000000000000000000000000000000000000000000000000000000000000",
+      });
+
+      if (result.results && result.results[0]?.returnValues) {
+        const returnValue = result.results[0].returnValues[0];
+        if (returnValue && returnValue[0]) {
+          const bytes = returnValue[0];
+          const objectIdHex = Array.from(bytes)
+            .map((b: number) => b.toString(16).padStart(2, "0"))
+            .join("");
+          const objectId = `0x${objectIdHex}`;
+          setProfileId(objectId);
+          setError(null);
+        } else {
+          setError("Kullanıcı bulunamadı!");
+        }
+      } else {
+        setError("Kullanıcı bulunamadı!");
+      }
+    } catch (err: any) {
+      console.error("❌ Kullanıcı arama hatası:", err);
+      setError(err.message || "Arama başarısız");
+    } finally {
+      setSearchLoading(false);
+    }
+  };
 
   const handleRateUser = () => {
     // Validasyon
@@ -72,7 +123,14 @@ export function RateUser() {
         // Hata olursa
         onError: (err) => {
           console.error("❌ Hata:", err);
-          setError(err.message || "Puanlama başarısız");
+          
+          // Kendini puanlama hatası kontrolü
+          if (err.message && err.message.includes("MoveAbort") && err.message.includes("1")) {
+            setError("❌ Kendini puanlayamazsın! Başka bir kullanıcının Object ID'sini kullan.");
+          } else {
+            setError(err.message || "Puanlama başarısız");
+          }
+          
           setIsLoading(false);
         },
       }
@@ -89,6 +147,32 @@ export function RateUser() {
         Başka bir kullanıcının güven puanını değiştirin ve ona silinemeyen bir ReputationCard gönderin.
       </Text>
 
+      {/* Username Search */}
+      <Flex direction="column" gap="2">
+        <Text size="2" weight="bold">
+          🔍 Kullanıcı Ara (İsteğe Bağlı):
+        </Text>
+        <Flex gap="2">
+          <TextField.Root
+            placeholder="Kullanıcı adını girin..."
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            disabled={isLoading || searchLoading}
+            style={{ flex: 1 }}
+          />
+          <Button
+            onClick={handleSearchUsername}
+            disabled={isLoading || searchLoading || !username.trim()}
+            variant="soft"
+          >
+            {searchLoading ? "Arıyor..." : "Ara"}
+          </Button>
+        </Flex>
+        <Text size="1" color="gray">
+          💡 İpucu: "Kullanıcılar" listesinden bir kullanıcı adı kopyalayıp buraya yapıştırabilirsiniz
+        </Text>
+      </Flex>
+
       {/* Profile ID Input */}
       <Flex direction="column" gap="2">
         <Text size="2" weight="bold">
@@ -101,7 +185,7 @@ export function RateUser() {
           disabled={isLoading}
         />
         <Text size="1" color="gray">
-          ℹ️ Puanlamak istediğiniz kişinin UserProfile Object ID'sini girin
+          ℹ️ Yukarıdaki aramayı kullanın veya Object ID'yi manuel girin
         </Text>
       </Flex>
 

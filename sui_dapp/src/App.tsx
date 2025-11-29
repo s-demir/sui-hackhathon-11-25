@@ -1,15 +1,12 @@
 import { ConnectButton } from "@mysten/dapp-kit";
 import { Box, Container, Flex, Heading } from "@radix-ui/themes";
-<<<<<<< HEAD
-import { WalletStatus } from "./WalletStatus";
-=======
 import { OwnedObjects } from "./OwnedObjects";
 import { CreateProfile } from "./components/CreateProfile";
 import { RateUser } from "./components/RateUser";
 import { ViewProfile } from "./components/ViewProfile";
 import { ReputationCards } from "./components/ReputationCards";
 import { ProfileList } from "./components/ProfileList";
->>>>>>> sedemir
+import { UserList } from "./components/UserList";
 
 function App() {
   return (
@@ -24,14 +21,8 @@ function App() {
         }}
       >
         <Box>
-<<<<<<< HEAD
-          <Heading>dApp Starter Template</Heading>
-        </Box>
-
-=======
           <Heading>🎯 SuiSoul Trust System</Heading>
         </Box>
->>>>>>> sedemir
         <Box>
           <ConnectButton />
         </Box>
@@ -43,16 +34,13 @@ function App() {
           px="4"
           style={{ background: "var(--gray-a2)", minHeight: 500 }}
         >
-<<<<<<< HEAD
-          <WalletStatus />
-=======
           <OwnedObjects />
           <CreateProfile />
+          <UserList />
           <ProfileList />
           <RateUser />
           <ViewProfile />
           <ReputationCards />
->>>>>>> sedemir
         </Container>
       </Container>
     </>

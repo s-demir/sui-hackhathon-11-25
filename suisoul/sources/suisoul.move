@@ -3,10 +3,12 @@ module suisoul::trust_system {
     use sui::table::{Self, Table};
     use sui::transfer;
     use sui::tx_context::TxContext;
+    use std::vector;
 
     public struct UsernameRegistry has key {
         id: UID,
         usernames: Table<String, address>,
+        username_list: vector<String>,
     }
 
     public struct UserProfile has key, store {
@@ -44,6 +46,7 @@ module suisoul::trust_system {
         };
         
         table::add(&mut registry.usernames, profile.username, profile_address);
+        vector::push_back(&mut registry.username_list, profile.username);
         transfer::share_object(profile);
     }
 
@@ -53,6 +56,9 @@ module suisoul::trust_system {
         comment: String,
         ctx: &mut TxContext
     ) {
+        // Kendini puanlamayı engelle
+        assert!(profile.owner != tx_context::sender(ctx), 1); // Error code: 1 = Cannot rate yourself
+        
         if (score == 1) { 
             if (profile.trust_score > 5) { profile.trust_score = profile.trust_score - 5 } 
             else { profile.trust_score = 0 }; 
@@ -89,6 +95,14 @@ module suisoul::trust_system {
     ): address {
         *table::borrow(&registry.usernames, username)
     }
+
+    public fun get_all_usernames(registry: &UsernameRegistry): vector<String> {
+        registry.username_list
+    }
+
+    public fun get_username_count(registry: &UsernameRegistry): u64 {
+        vector::length(&registry.username_list)
+    }
     fun init(ctx: &mut TxContext) {
         transfer::transfer(
             AdminCap { id: object::new(ctx) }, 
@@ -98,6 +112,7 @@ module suisoul::trust_system {
         transfer::share_object(UsernameRegistry {
             id: object::new(ctx),
             usernames: table::new(ctx),
+            username_list: vector::empty(),
         });
     }
 }
