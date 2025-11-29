@@ -91,7 +91,7 @@ export function CreateProfile() {
       <Text size="2" color="gray">
         Initial trust score: 100 points
       </Text>
-
+	  
       {email && (
         <Flex 
           direction="column" 
