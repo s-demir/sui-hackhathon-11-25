@@ -1,0 +1,15 @@
+# Ortak ignore
+node_modules/
+dist/
+build/
+.env
+.env.local
+.env.development
+.env.production
+.DS_Store
+*.log
+# Sui özel
+sui_dapp/.env
+sui_dapp/.env.local
+oauth-server/.env
+oauth-server/.env.local
