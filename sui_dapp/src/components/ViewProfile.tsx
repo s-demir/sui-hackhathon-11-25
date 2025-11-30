@@ -13,6 +13,19 @@ export function ViewProfile() {
   const [showCards, setShowCards] = useState(false);
   const [ownerAddress, setOwnerAddress] = useState("");
 
+  // ✅ Güvenli Kopyalama Fonksiyonu
+  const handleSafeCopy = async (text: string) => {
+    if (!text) return alert("Kopyalanacak ID bulunamadı!");
+    
+    try {
+      await navigator.clipboard.writeText(text);
+      alert("✅ ID Kopyalandı!");
+    } catch (err) {
+      console.error("Kopyalama hatası:", err);
+      prompt("Otomatik kopyalanamadı. Lütfen buradan kopyalayın:", text);
+    }
+  };
+
   const { data, isLoading, error, refetch } = useSuiClientQuery(
     "getObject",
     {
@@ -207,6 +220,26 @@ export function ViewProfile() {
             <Text size="1" color="gray">
               {getTrustScoreLabel(Number(trustScore))}
             </Text>
+          </Flex>
+
+          {/* ✅ YENİ EKLENDİ: Admin İşlemleri İçin Profil ID'si */}
+          <Flex direction="column" gap="1" style={{ background: "var(--gray-a3)", padding: "10px", borderRadius: "6px", border: "1px solid var(--gray-a5)" }}>
+            <Text size="1" weight="bold" color="gray">
+              🆔 Profile Object ID (For Admin Tasks):
+            </Text>
+            <Flex justify="between" align="center" gap="2">
+              <Text size="2" style={{ fontFamily: "monospace", wordBreak: "break-all", color: "var(--blue-11)" }}>
+                {searchId}
+              </Text>
+              <Button 
+                size="1" 
+                variant="solid" 
+                onClick={() => handleSafeCopy(searchId)}
+                style={{ cursor: "pointer" }}
+              >
+                📋 Copy
+              </Button>
+            </Flex>
           </Flex>
 
           {/* Display Reputation Cards */}

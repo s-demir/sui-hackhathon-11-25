@@ -1,25 +1,22 @@
-// Bu kod şunları yapacak:
-// Cüzdanındaki tüm eşyaları tarayacak.
-// İçinde AdminCap var mı diye bakacak.
-// Varsa paneli gösterecek, yoksa null (hiçbir şey) döndürecek.
-// Butona basınca o AdminCap ID'sini kullanarak işlem yapacak.
-
 import { useCurrentAccount, useSuiClientQuery, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { Button, Card, Flex, Heading, Text, TextField } from "@radix-ui/themes";
 import { useState } from "react";
-import { PACKAGE_ID, MODULE_NAME, STRUCT_TYPES, REGISTRY_ID } from "../constants";
+import { PACKAGE_ID, MODULE_NAME, STRUCT_TYPES } from "../constants";
 
 export function AdminPanel() {
   const account = useCurrentAccount();
   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
   const [targetProfileId, setTargetProfileId] = useState("");
 
-  // AdminCap kontrolü
+  // 1. Cüzdandaki AdminCap objesini ara
   const { data: ownedObjects, isPending } = useSuiClientQuery(
     "getOwnedObjects",
     {
       owner: account?.address || "",
+      filter: {
+        StructType: STRUCT_TYPES.ADMIN_CAP, // Sadece AdminCap tipindeki objeleri getir
+      },
       options: { showType: true },
     },
     {
@@ -27,53 +24,21 @@ export function AdminPanel() {
     }
   );
 
-  // Registry'den admin_address kontrolü
-  const { data: registryData, isPending: isRegistryPending } = useSuiClientQuery(
-    "getObject",
-    {
-      id: REGISTRY_ID,
-      options: { showContent: true },
-    },
-    {
-      enabled: !!account,
-    }
-  );
+  // Yükleniyorsa veya account yoksa gösterme
+  if (!account || isPending || !ownedObjects) return null;
 
-  if (!account || isPending || isRegistryPending || !ownedObjects || !registryData) return null;
+  // AdminCap var mı kontrol et
+  const adminCapObj = ownedObjects.data?.[0]; // Filtrelediğimiz için ilk geleni alabiliriz
 
-  const adminCapObj = ownedObjects.data.find(
-    (obj) => obj.data?.type === STRUCT_TYPES.ADMIN_CAP
-  );
+  // --- DEBUG ---
+  // Eğer panel görünmüyorsa konsola bakmak için bu logları açabilirsin
+  // console.log("Account:", account.address);
+  // console.log("Aranan Admin Tipi:", STRUCT_TYPES.ADMIN_CAP);
+  // console.log("Bulunan Objeler:", ownedObjects.data);
+  // --- DEBUG ---
 
-  // --- DEBUG KODU BAŞLANGIÇ ---
-  console.log("---------------- DEBUG BAŞLANGIÇ ----------------");
-  console.log("Sabitlerdeki Package ID:", PACKAGE_ID);
-  console.log("Kodun Aradığı Admin Tipi:", STRUCT_TYPES.ADMIN_CAP);
-  
-  // Cüzdandaki tüm objeleri yazdır
-  if (ownedObjects?.data) {
-      console.log("Cüzdanımdaki Objeler:", ownedObjects.data);
-      
-      const foundAdmin = ownedObjects.data.find(
-        (obj) => obj.data?.type === STRUCT_TYPES.ADMIN_CAP
-      );
-      console.log("Bulunan AdminCap:", foundAdmin ? "BULDUM! ✅" : "YOK ❌");
-      
-      // Eğer AdminCap bulunduysa detaylarını yazdır
-      if (foundAdmin) {
-        console.log("AdminCap Detayları:", foundAdmin);
-        console.log("AdminCap ID:", foundAdmin.data?.objectId);
-      }
-  }
-  console.log("---------------- DEBUG BİTİŞ ----------------");
-  // --- DEBUG KODU BİTİŞ ---
-
-  // Registry'den admin adresi al
-  const registryContent = registryData.data?.content as any;
-  const adminAddress = registryContent?.fields?.admin_address;
-
-  // Eğer AdminCap yoksa VE admin değilse gösterme
-  if (!adminCapObj && account.address !== adminAddress) {
+  // Eğer AdminCap yoksa paneli GÖSTERME (return null)
+  if (!adminCapObj) {
     return null;
   }
 
@@ -81,22 +46,27 @@ export function AdminPanel() {
 
   const handleApproveTask = () => {
     if (!targetProfileId) return alert("Please enter a Profile ID!");
-    if (!adminCapObj) return alert("AdminCap not found!");
 
     const tx = new Transaction();
     tx.moveCall({
       target: `${PACKAGE_ID}::${MODULE_NAME}::complete_redemption_task`,
       arguments: [
-        tx.object(adminCapObj.data!.objectId), // AdminCap
-        tx.object(targetProfileId), // Profile
+        tx.object(adminCapObj.data!.objectId), // 1. Argüman: AdminCap
+        tx.object(targetProfileId),            // 2. Argüman: UserProfile
       ],
     });
 
     signAndExecute(
       { transaction: tx },
       {
-        onSuccess: () => alert("Task Approved! User earned +15 Points."),
-        onError: (err) => console.error(err),
+        onSuccess: () => {
+            alert("✅ Task Approved! User earned +15 Points.");
+            setTargetProfileId(""); // Inputu temizle
+        },
+        onError: (err) => {
+            console.error(err);
+            alert("❌ Failed to approve task: " + err.message);
+        },
       }
     );
   };
@@ -113,25 +83,23 @@ export function AdminPanel() {
       color: '#e0e7ef',
     }}>
       <Flex direction="row" align="center" gap="2" mb="2">
-        <span style={{ fontSize: 28, color: '#3b82f6' }}>🔒</span>
+        <span style={{ fontSize: 28 }}>👮‍♂️</span>
         <Heading size="5" style={{ color: '#e0e7ef', fontWeight: 700 }}>Admin Panel</Heading>
       </Flex>
-      <Text size="2" color="gray" mb="2" style={{ marginBottom: 8 }}>
-        <span style={{
-          background: '#334155',
-          color: '#60a5fa',
-          borderRadius: 6,
-          padding: '2px 10px',
-          fontSize: 13,
-          fontWeight: 500,
-          letterSpacing: 0.1,
-        }}>Only authorized administrators can see this area.</span>
-      </Text>
+      
+      <Flex direction="column" gap="1" mb="4">
+         <Text size="2" style={{ color: '#94a3b8' }}>
+            Welcome, Admin. You have the authority to approve tasks.
+         </Text>
+         <Text size="1" style={{ color: '#475569', fontFamily: 'monospace' }}>
+            Cap ID: {adminCapObj.data?.objectId.slice(0, 6)}...{adminCapObj.data?.objectId.slice(-4)}
+         </Text>
+      </Flex>
 
       <Flex direction="column" gap="3" mt="3">
         <Text weight="bold" style={{ color: '#60a5fa', fontSize: 16 }}>Approve Restorative Justice Task</Text>
         <TextField.Root 
-          placeholder="User's Profile ID (0x...)" 
+          placeholder="Paste User Profile Object ID..." 
           value={targetProfileId}
           onChange={(e) => setTargetProfileId(e.target.value)}
           style={{
@@ -142,7 +110,6 @@ export function AdminPanel() {
             fontSize: 15,
             padding: '10px 12px',
             marginBottom: 8,
-            boxShadow: '0 2px 8px rgba(37,99,235,0.07)',
           }}
         />
         <Button
@@ -151,11 +118,8 @@ export function AdminPanel() {
             color: '#fff',
             fontWeight: 600,
             fontSize: 15,
-            borderRadius: 8,
-            boxShadow: '0 2px 8px rgba(37,99,235,0.13)',
-            border: 'none',
+            cursor: 'pointer',
             padding: '12px 0',
-            transition: 'background 0.2s',
           }}
           onClick={handleApproveTask}
         >

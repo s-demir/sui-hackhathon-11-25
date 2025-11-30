@@ -7,31 +7,32 @@ import { useZkLogin } from "../hooks/useZkLogin";
 
 export function CreateProfile() {
   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
-  const { email } = useZkLogin(); // Get email from zkLogin if user logged in with OAuth
+  const { email } = useZkLogin(); 
   const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [createdProfileId, setCreatedProfileId] = useState<string | null>(null);
 
+  // ✅ Güvenli Kopyalama Fonksiyonu
+  const handleSafeCopy = async (text: string | null) => {
+    if (!text) return alert("Kopyalanacak ID bulunamadı!");
+    
+    try {
+      await navigator.clipboard.writeText(text);
+      alert("✅ Profil ID'si kopyalandı!");
+    } catch (err) {
+      console.error("Kopyalama hatası:", err);
+      prompt("Otomatik kopyalanamadı. Lütfen buradan kopyalayın:", text);
+    }
+  };
+
   const handleCreateProfile = () => {
-    if (!username.trim()) {
-      setError("Username is required!");
-      return;
-    }
-    if (username.length < 3) {
-      setError("Username must be at least 3 characters!");
-      return;
-    }
-    if (username.length > 20) {
-      setError("Username must be at most 20 characters!");
-      return;
-    }
-    // Only allow alphanumeric and underscore (no Turkish or special chars)
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      setError("Username can only contain letters (a-z), numbers (0-9), and underscores (_)!");
-      return;
-    }
+    // Validasyonlar
+    if (!username.trim()) { setError("Username is required!"); return; }
+    if (username.length < 3) { setError("Username must be at least 3 characters!"); return; }
+    if (username.length > 20) { setError("Username must be at most 20 characters!"); return; }
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) { setError("Only letters, numbers, and underscores!"); return; }
 
     setIsLoading(true);
     setError(null);
@@ -43,20 +44,22 @@ export function CreateProfile() {
       arguments: [
         tx.object(REGISTRY_ID),
         tx.pure.string(username),
-        //tx.pure.string(email || ""), // Pass email from zkLogin, or empty string for wallet users
+        // ❌ Email parametresi kaldırıldı (Kontratla uyumlu hale getirildi)
       ],
     });
 
     signAndExecute(
-      {
-        transaction: tx,
-      },
+      { transaction: tx },
       {
         onSuccess: (result) => {
           const createdObjects = (result as any).effects?.created || [];
-          const userProfile = createdObjects.find((obj: any) => 
-            obj.owner === "Shared"
-          );
+          // Shared olmayan, kullanıcının sahip olduğu objeyi bulmaya çalışıyoruz
+          // Ancak CreateProfile fonksiyonu objeyi paylaştığı için (share_object)
+          // createdObjects içinde Owner: Shared olanı bulmalıyız.
+          
+          // Genellikle ilk oluşturulan obje profil objesidir.
+          // Daha kesin çözüm için 'reference.objectId' kullanılır.
+          const userProfile = createdObjects[0]; 
           
           if (userProfile) {
             setCreatedProfileId(userProfile.reference.objectId);
@@ -66,18 +69,13 @@ export function CreateProfile() {
           setIsLoading(false);
         },
         onError: (err) => {
-          const errorMsg = err.message || "";
-          // Move hata kodları: 0=UsernameTaken, 2=WalletHasProfile
-         if (errorMsg.includes("MoveAbort")) {
-            if (errorMsg.includes("0)")) {
-                setError(`❌ Username '${username}' is already taken!`);
-            } else if (errorMsg.includes("2)")) {
-                setError(`❌ This wallet already has a profile!`);
-            } else {
-                setError("❌ Failed to create profile on-chain.");
-            }
+          const msg = err.message || "";
+          if (msg.includes("MoveAbort")) {
+             if (msg.includes("0)")) setError(`Username '@${username}' is already taken!`);
+             else if (msg.includes("2)")) setError("This wallet already has a profile!");
+             else setError("Transaction failed. Code: " + msg);
           } else {
-            setError(errorMsg || "Failed to create profile");
+             setError(msg || "Failed to create profile");
           }
           setIsLoading(false);
         },
@@ -92,56 +90,39 @@ export function CreateProfile() {
       </Text>
       
       <Text size="2" color="gray">
-        Initial trust score: 100 points
+        Start your reputation journey with 100 points.
       </Text>
 	  
       {email && (
         <Flex 
           direction="column" 
           gap="1" 
-          style={{ 
-            background: "var(--blue-a3)", 
-            padding: "10px", 
-            borderRadius: "6px",
-            border: "1px solid var(--blue-6)"
-          }}
+          style={{ background: "var(--blue-a3)", padding: "10px", borderRadius: "6px" }}
         >
-          <Text size="2" weight="bold" color="blue">
-            🔐 Authenticated with Email
-          </Text>
-          <Text size="2" style={{ fontFamily: "monospace" }}>
-            {email}
-          </Text>
+          <Text size="2" weight="bold" color="blue">Authenticated as:</Text>
+          <Text size="2" style={{ fontFamily: "monospace" }}>{email}</Text>
         </Flex>
       )}
 
       <Flex direction="column" gap="2">
-        <Text size="2" weight="bold">
-          Username:
-        </Text>
+        <Text size="2" weight="bold">Username:</Text>
         <TextField.Root
-          placeholder={`e.g. user_${Math.floor(Math.random() * 10000)}`}
+          placeholder="Enter a username..."
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           disabled={isLoading || success}
         />
-        <Flex justify="between" align="center">
-          <Text size="1" color="gray">
-            3-20 characters, letters, numbers, underscore only
-          </Text>
-          <Button
+        <Button
             size="1"
             variant="ghost"
-            onClick={() => setUsername(`user_${Date.now()}`)}
+            onClick={() => setUsername(`user_${Math.floor(Math.random() * 10000)}`)}
             disabled={isLoading || success}
-            style={{ cursor: "pointer" }}
+            style={{ cursor: "pointer", alignSelf: "flex-end" }}
           >
             🎲 Random
-          </Button>
-        </Flex>
+        </Button>
       </Flex>
 
-      {/* Create Profile Button */}
       <Button
         onClick={handleCreateProfile}
         disabled={isLoading || success || !username.trim()}
@@ -151,7 +132,7 @@ export function CreateProfile() {
         {isLoading ? "Creating..." : success ? "✅ Profile Created!" : "Create Profile"}
       </Button>
 
-      {/* Success message */}
+      {/* ✅ BAŞARI EKRANI - GÜNCELLENDİ */}
       {success && createdProfileId && (
         <Flex 
           direction="column" 
@@ -161,65 +142,45 @@ export function CreateProfile() {
             padding: "15px", 
             borderRadius: "8px", 
             border: "2px solid var(--green-9)",
-            animation: "slideIn 0.4s ease-out",
+            marginTop: "10px"
           }}
         >
           <Text size="3" weight="bold" color="green">
-            ✅ Profile Created Successfully!
+            ✅ Profil Başarıyla Oluşturuldu!
           </Text>
           
           <Text size="2">
-            Your trust score: <strong>100/100</strong>
+            Admin işlemleri için aşağıdaki <strong>Profil ID</strong>'sini kullanmalısın:
           </Text>
           
-          <Flex direction="column" gap="1">
-            <Text size="2" weight="bold">
-              🎯 Your Profile Object ID:
-            </Text>
-            <Text 
-              size="2" 
-              style={{ 
-                wordBreak: "break-all", 
-                fontFamily: "monospace",
-                background: "var(--gray-a3)",
-                padding: "8px",
-                borderRadius: "4px"
-              }}
-            >
+          {/* ID Gösterim Kutusu */}
+          <Flex align="center" gap="2" style={{ background: "rgba(255,255,255,0.5)", padding: "8px", borderRadius: "4px" }}>
+            <Text size="2" style={{ fontFamily: "monospace", wordBreak: "break-all", flex: 1 }}>
               {createdProfileId}
             </Text>
           </Flex>
           
+          {/* ✅ Çalışan Kopyalama Butonu */}
           <Button
-            onClick={() => {
-              navigator.clipboard.writeText(createdProfileId);
-              alert("✅ Object ID copied to clipboard!");
-            }}
+            onClick={() => handleSafeCopy(createdProfileId)}
             variant="solid"
-            style={{ cursor: "pointer" }}
+            color="green"
+            style={{ cursor: "pointer", width: "100%" }}
           >
-            📋 Copy Object ID
+            📋 Profil ID'sini Kopyala
           </Button>
           
-          <Flex direction="column" gap="1" style={{ marginTop: "10px", background: "var(--yellow-a2)", padding: "10px", borderRadius: "4px" }}>
-            <Text size="1" weight="bold">
-              💡 Important!
-            </Text>
-            <Text size="1">
-              Share this Object ID with others! They need it to rate you.
-            </Text>
-          </Flex>
+          <Text size="1" color="gray" style={{ marginTop: "5px" }}>
+            ⚠️ Not: Bu ID, cüzdan adresinden farklıdır. Puanlama ve Admin işlemleri için bunu kullanın.
+          </Text>
         </Flex>
       )}
 
-      {/* Error message */}
       {error && (
-        <Text size="2" color="red">
+        <Text size="2" color="red" style={{ marginTop: "10px" }}>
           ❌ {error}
         </Text>
       )}
-
-
     </Flex>
   );
 }
