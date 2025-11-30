@@ -2,17 +2,17 @@
  * Smart Contract Configuration
  */
 
-// Package ID: Terminal çıktısındaki AdminCap'in paket adresi (0x797d...)
-export const PACKAGE_ID = "0x797d351f04fd3d3374ded71ecdff12e80f53970b83c62eeb47251bbd346bff2c";
-
-// Module ismi
+// Package ID: AdminCap's package address from terminal output (0x797d...)
+// Package ID: From latest publish output
+export const PACKAGE_ID = "0xd4761bd2bab1009c6126711fa02389c1599fd520543369a617091070d9ad9aab";
+// Module name
 export const MODULE_NAME = "trust_system";
-
-// AdminCap ID: Terminal çıktısındaki ilk obje (0x2906...)
-export const ADMIN_CAP_ID = "0x2906c51162aafe267b8555e80bf70fdae0c833c7e50c07f0d6144bf1655985a6";
-
-// UsernameRegistry ID: Önceki deploy çıktısından aldığımız shared object
-export const REGISTRY_ID = "0x48c583f21e874bea2ff8b33777902f2eddc75306e1fd40afc7b2d7895569c73c";
+// AdminCap ID: First object from terminal output (0x2906...)
+// AdminCap ID: From latest publish output
+export const ADMIN_CAP_ID = "0xc426fbf34ba4cfc77525adb39da53049e55bf6607afba531c045145f3a5406c0";
+// UsernameRegistry ID: Shared object from previous deploy output
+// UsernameRegistry ID: From latest publish output
+export const REGISTRY_ID = "0xc7c5bc8c1c5d76584dffccc77629324a9f9eba262213a3c56155f8b521c90d09";
 
 export const FUNCTIONS = {
   CREATE_PROFILE: "create_profile",

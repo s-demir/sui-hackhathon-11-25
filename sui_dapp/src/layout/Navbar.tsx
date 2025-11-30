@@ -131,7 +131,7 @@ export function Navbar() {
       <Flex align="center" gap="6">
         <Link to="/" style={{ textDecoration: "none" }}>
           <Heading size="5" style={{ cursor: "pointer" }}>
-            🎯 ftSui
+            🎯 SuiSoul
           </Heading>
         </Link>
 

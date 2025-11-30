@@ -4,7 +4,7 @@ import { useCurrentAccount } from '@mysten/dapp-kit';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 
-// Sağ alt köşede açılır/kapanır info kutusu bileşeni
+// Info box component that opens/closes at the bottom right corner
 function InfoCornerBox() {
   const [open, setOpen] = useState(false);
   return (
@@ -97,7 +97,7 @@ export default function Login() {
     <Container size="2" style={{ marginTop: '60px' }}>
       <Flex direction="column" gap="6" align="center">
         <Heading size="8" style={{ textAlign: 'center' }}>
-          Welcome to ftSui
+          Welcome to SuiSoul
         </Heading>
         
         <Text size="4" color="gray" style={{ textAlign: 'center', maxWidth: '500px' }}>

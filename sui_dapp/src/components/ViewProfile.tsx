@@ -14,16 +14,16 @@ export function ViewProfile() {
   const [ownerAddress, setOwnerAddress] = useState("");
   const [copied, setCopied] = useState(false);
 
-  // ✅ Güvenli Kopyalama Fonksiyonu
+  // ✅ Safe Copy Function
   const handleSafeCopy = async (text: string) => {
-    if (!text) return alert("Kopyalanacak ID bulunamadı!");
+    if (!text) return alert("No ID found to copy!");
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error("Kopyalama hatası:", err);
-      prompt("Otomatik kopyalanamadı. Lütfen buradan kopyalayın:", text);
+      console.error("Copy error:", err);
+      prompt("Could not copy automatically. Please copy from here:", text);
     }
   };
 

@@ -26,11 +26,11 @@ export function ReputationCards() {
     {
       owner: searchAddress,
       filter: {
-        StructType: STRUCT_TYPES.REPUTATION_CARD, // Sadece ReputationCard'lar
+        StructType: STRUCT_TYPES.REPUTATION_CARD, // Only ReputationCards
       },
       options: {
-        showContent: true,  // Kart içeriğini getir (score, comment)
-        showType: true,     // Tipini getir
+        showContent: true,  // Get card content (score, comment)
+        showType: true,     // Get type
       },
     },
     {
@@ -55,23 +55,23 @@ export function ReputationCards() {
   return (
     <Flex direction="column" gap="3" style={{ padding: "20px", border: "1px solid var(--gray-a4)", borderRadius: "8px" }} data-reputation-cards>
       <Text size="5" weight="bold">
-        📋 Reputation Kartları
+        📋 Reputation Cards
       </Text>
       
       <Text size="2" color="gray">
-        Bir kullanıcının aldığı tüm puanlama kartlarını görüntüleyin. Bu kartlar silinemeyen SBT'lerdir.
+        View all rating cards received by a user. These cards are non-transferable SBTs.
       </Text>
 
       <Flex direction="column" gap="2">
         <Text size="2" weight="bold">
-          Kullanıcı Cüzdan Adresi:
+          User Wallet Address:
         </Text>
         <Text size="1" color="gray">
-          💡 İpucu: ViewProfile'dan "owner" adresini kopyalayıp buraya yapıştırın
+          💡 Tip: Copy the "owner" address from ViewProfile and paste it here
         </Text>
         <Flex gap="2">
           <TextField.Root
-            placeholder="0x... (cüzdan adresi)"
+            placeholder="0x... (wallet address)"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             disabled={isLoading}

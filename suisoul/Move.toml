@@ -2,13 +2,14 @@
 name = "suisoul"
 edition = "2024.beta" # edition = "legacy" to use legacy (pre-2024) Move
 
+
 [dependencies]
-# Sui Framework bağımlılığını ekliyoruz. 
-# Eğer localde çalışıyorsan local path verebilirsin ama genelde git üzerinden çekilir.
+# Adding Sui Framework dependency.
+# If you are working locally, you can provide a local path, but generally it is fetched from git.
 Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet" }
 
 [addresses]
 suisoul = "0x0" 
 
 [dev-dependencies]
-# Testler için gerekli olabilir, şimdilik boş kalabilir veya yorum satırı olabilir.
+# May be required for tests, can be left empty or commented for now.

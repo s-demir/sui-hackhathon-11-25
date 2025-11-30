@@ -9,7 +9,7 @@ export function Explore() {
       <Flex direction="column" gap="6">
         <Flex direction="column" gap="2">
           <Heading size="7">🔍 Explore Users</Heading>
-          <Text color="gray">Search and discover users on the ftSui network</Text>
+          <Text color="gray">Search and discover users on the SuiSoul network</Text>
         </Flex>
 
         <ViewProfile />

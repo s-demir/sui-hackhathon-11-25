@@ -14,21 +14,21 @@ export function CreateProfile() {
   const [success, setSuccess] = useState(false);
   const [createdProfileId, setCreatedProfileId] = useState<string | null>(null);
 
-  // ✅ Güvenli Kopyalama Fonksiyonu
+  // ✅ Safe Copy Function
   const handleSafeCopy = async (text: string | null) => {
-    if (!text) return alert("Kopyalanacak ID bulunamadı!");
+    if (!text) return alert("No ID found to copy!");
     
     try {
       await navigator.clipboard.writeText(text);
-      alert("✅ Profil ID'si kopyalandı!");
+      alert("✅ Profile ID copied!");
     } catch (err) {
-      console.error("Kopyalama hatası:", err);
-      prompt("Otomatik kopyalanamadı. Lütfen buradan kopyalayın:", text);
+      console.error("Copy error:", err);
+      prompt("Could not copy automatically. Please copy from here:", text);
     }
   };
 
   const handleCreateProfile = () => {
-    // Validasyonlar
+    // Validations
     if (!username.trim()) { setError("Username is required!"); return; }
     if (username.length < 3) { setError("Username must be at least 3 characters!"); return; }
     if (username.length > 20) { setError("Username must be at most 20 characters!"); return; }
@@ -44,7 +44,7 @@ export function CreateProfile() {
       arguments: [
         tx.object(REGISTRY_ID),
         tx.pure.string(username),
-        // ❌ Email parametresi kaldırıldı (Kontratla uyumlu hale getirildi)
+        // ❌ Email parameter removed (made compatible with contract)
       ],
     });
 
@@ -53,12 +53,11 @@ export function CreateProfile() {
       {
         onSuccess: (result) => {
           const createdObjects = (result as any).effects?.created || [];
-          // Shared olmayan, kullanıcının sahip olduğu objeyi bulmaya çalışıyoruz
-          // Ancak CreateProfile fonksiyonu objeyi paylaştığı için (share_object)
-          // createdObjects içinde Owner: Shared olanı bulmalıyız.
-          
-          // Genellikle ilk oluşturulan obje profil objesidir.
-          // Daha kesin çözüm için 'reference.objectId' kullanılır.
+          // We try to find the object owned by the user (not shared)
+          // But since CreateProfile shares the object (share_object),
+          // we should find the one with Owner: Shared in createdObjects.
+          // Usually, the first created object is the profile object.
+          // For a more precise solution, use 'reference.objectId'.
           const userProfile = createdObjects[0]; 
           
           if (userProfile) {

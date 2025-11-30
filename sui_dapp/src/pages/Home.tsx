@@ -5,10 +5,10 @@ import { useCurrentAccount, useSuiClientQuery } from "@mysten/dapp-kit";
 import { REGISTRY_ID } from "../constants";
 
 export function Home() {
-    // Wallet bağlantı fonksiyonu
+    // Wallet connect function
     const handleWalletConnect = () => {
-      // Mysten dapp-kit ile bağlantı için genellikle Navbar'da ConnectButton kullanılıyor
-      // Home'da doğrudan bağlantı için window.dispatchEvent ile Navbar'daki ConnectButton'u tetikleyebiliriz
+      // Usually ConnectButton from Mysten dapp-kit is used in Navbar
+      // In Home, we can trigger Navbar's ConnectButton directly with window.dispatchEvent
       window.dispatchEvent(new Event('open_wallet_modal'));
     }
   const account = useCurrentAccount();
@@ -34,7 +34,7 @@ export function Home() {
           Build Trust on the Blockchain
         </Heading>
         <Text size="5" align="center" color="gray" style={{ maxWidth: "600px" }}>
-          ftSui is a decentralized reputation system where your trust score is permanently recorded on ftSui Network
+          SuiSoul is a decentralized reputation system where your trust score is permanently recorded on SuiSoul Network
         </Text>
         
         <Flex gap="4" mt="4" wrap="wrap" justify="center">

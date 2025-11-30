@@ -2,20 +2,20 @@
 
 React + TypeScript frontend for SuiSoul Trust System.
 
-## 🚀 Başlangıç
+## 🚀 Getting Started
 
 ```bash
 npm install
 npm run dev
 ```
 
-## 📦 Teknolojiler
+## 📦 Technologies
 
 - React 18 + TypeScript
 - Vite
 - @mysten/dapp-kit
 - Radix UI
 
-## ⚙️ Yapılandırma
+## ⚙️ Configuration
 
-Contract bilgilerini `src/constants.ts` dosyasından güncelleyin.
+Update contract information in the `src/constants.ts` file.

@@ -1,10 +1,10 @@
 module suisoul::trust_system {
-    // --- Importlar ---
+    // --- Imports ---
     use std::string::String;
     use sui::table::{Self, Table};
     use sui::event;
 
-    // --- Hata Kodları (Constants) ---
+    // --- Error Codes (Constants) ---
     const EUsernameTaken: u64 = 0;
     const ECannotRateSelf: u64 = 1;
     const EWalletAlreadyHasProfile: u64 = 2;
@@ -12,17 +12,17 @@ module suisoul::trust_system {
     const EAlreadyRated: u64 = 4;
     const EInvalidScore: u64 = 5;
 
-    // --- Events (Olaylar) - YENİ ---
-    // Frontend'in dinleyeceği olaylar burada tanımlanır.
+    // --- Events (NEW) ---
+    // Events that the frontend will listen to are defined here.
     
-    // 1. Profil oluşturulduğunda fırlatılır
+    // 1. Fired when a profile is created
     public struct ProfileCreated has copy, drop {
         profile_id: ID,
         user_address: address,
         username: String,
     }
 
-    // 2. Bir kullanıcı puanlandığında fırlatılır
+    // 2. Fired when a user is rated
     public struct UserRated has copy, drop {
         rater: address,
         target_profile_id: ID,
@@ -30,7 +30,7 @@ module suisoul::trust_system {
         new_trust_score: u64,
     }
 
-    // --- Structlar (Veri Yapıları) ---
+    // --- Structs (Data Structures) ---
     public struct UsernameRegistry has key {
         id: UID,
         usernames: Table<String, address>,
@@ -56,7 +56,7 @@ module suisoul::trust_system {
         id: UID 
     }
 
-    // --- Fonksiyonlar ---
+    // --- Functions ---
 
     public fun create_profile(
         registry: &mut UsernameRegistry,
@@ -69,13 +69,13 @@ module suisoul::trust_system {
         assert!(!table::contains(&registry.usernames, username), EUsernameTaken);
         
         let profile_uid = object::new(ctx);
-        // Event için ID'yi kopyalıyoruz (UID move edilmeden önce)
+        // Copy ID for event (before UID is moved)
         let profile_id = object::uid_to_inner(&profile_uid); 
         let profile_address = object::uid_to_address(&profile_uid);
         
         let profile = UserProfile {
             id: profile_uid,
-            username: username, // 'username' değişkenini kopyalar
+            username: username, // Copies the 'username' variable
             trust_score: 100,
             owner: sender,
             rated_by: table::new(ctx),

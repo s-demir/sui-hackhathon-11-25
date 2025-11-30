@@ -7,7 +7,7 @@ import { PACKAGE_ID, MODULE_NAME, STRUCT_TYPES } from "../constants";
 export function AdminPanel() {
     const [copied, setCopied] = useState(false);
 
-    // Güvenli kopyalama fonksiyonu
+    // Safe copy function
     const handleCopyCapId = async () => {
       try {
         await navigator.clipboard.writeText(adminCapObj.data?.objectId || "");
@@ -21,13 +21,13 @@ export function AdminPanel() {
   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
   const [targetProfileId, setTargetProfileId] = useState("");
 
-  // 1. Cüzdandaki AdminCap objesini ara
+  // 1. Find AdminCap object in wallet
   const { data: ownedObjects, isPending } = useSuiClientQuery(
     "getOwnedObjects",
     {
       owner: account?.address || "",
       filter: {
-        StructType: STRUCT_TYPES.ADMIN_CAP, // Sadece AdminCap tipindeki objeleri getir
+        StructType: STRUCT_TYPES.ADMIN_CAP, // Only get objects of type AdminCap
       },
       options: { showType: true },
     },
@@ -36,25 +36,25 @@ export function AdminPanel() {
     }
   );
 
-  // Yükleniyorsa veya account yoksa gösterme
+  // If loading or account is missing, do not show
   if (!account || isPending || !ownedObjects) return null;
 
-  // AdminCap var mı kontrol et
-  const adminCapObj = ownedObjects.data?.[0]; // Filtrelediğimiz için ilk geleni alabiliriz
+  // Check if AdminCap exists
+  const adminCapObj = ownedObjects.data?.[0]; // Since we filter, we can take the first one
 
   // --- DEBUG ---
-  // Eğer panel görünmüyorsa konsola bakmak için bu logları açabilirsin
+  // If the panel is not visible, you can open these logs to check the console
   // console.log("Account:", account.address);
-  // console.log("Aranan Admin Tipi:", STRUCT_TYPES.ADMIN_CAP);
-  // console.log("Bulunan Objeler:", ownedObjects.data);
+  // console.log("Searched Admin Type:", STRUCT_TYPES.ADMIN_CAP);
+  // console.log("Found Objects:", ownedObjects.data);
   // --- DEBUG ---
 
-  // Eğer AdminCap yoksa paneli GÖSTERME (return null)
+  // If AdminCap does not exist, DO NOT SHOW the panel (return null)
   if (!adminCapObj) {
     return null;
   }
 
-  // --- Buradan aşağısı sadece Yöneticiye görünür ---
+  // --- Below this line is only visible to the Administrator ---
 
   const handleApproveTask = () => {
     if (!targetProfileId) return alert("Please enter a Profile ID!");
@@ -63,8 +63,8 @@ export function AdminPanel() {
     tx.moveCall({
       target: `${PACKAGE_ID}::${MODULE_NAME}::complete_redemption_task`,
       arguments: [
-        tx.object(adminCapObj.data!.objectId), // 1. Argüman: AdminCap
-        tx.object(targetProfileId),            // 2. Argüman: UserProfile
+        tx.object(adminCapObj.data!.objectId), // 1st Argument: AdminCap
+        tx.object(targetProfileId),            // 2nd Argument: UserProfile
       ],
     });
 
@@ -73,7 +73,7 @@ export function AdminPanel() {
       {
         onSuccess: () => {
             alert("✅ Task Approved! User earned +15 Points.");
-            setTargetProfileId(""); // Inputu temizle
+            setTargetProfileId(""); // Clear input
         },
         onError: (err) => {
             console.error(err);
