@@ -1,8 +1,8 @@
 # 🎯 SuiSoul Trust System
 
-Sui blockchain üzerinde çalışan merkezi olmayan güven/reputasyon sistemi.
+Decentralized trust/reputation system running on Sui blockchain.
 
-## 📁 Proje Yapısı
+## 📁 Project Structure
 
 ```
 sui/
@@ -24,7 +24,7 @@ sui/
     └── package.json
 ```
 
-## 🚀 Kurulum
+## 🚀 Setup
 
 ### Backend (Smart Contract)
 ```bash
@@ -40,16 +40,16 @@ npm install
 npm run dev
 ```
 
-## 📝 Özellikler
+## 📝 Features
 
-- ✅ Username ile profil oluşturma
-- ✅ Username uniqueness kontrolü
-- ✅ 1-5 yıldız puanlama sistemi
-- ✅ Silinemeyen ReputationCard'lar (SBT)
-- ✅ Dinamik güven puanı hesaplama
-- ✅ Admin redemption sistemi
+- ✅ Create profile with username
+- ✅ Username uniqueness check
+- ✅ 1-5 star rating system
+- ✅ Non-transferable ReputationCards (SBT)
+- ✅ Dynamic trust score calculation
+- ✅ Admin redemption system
 
-## 🔗 Contract Bilgileri
+## 🔗 Contract Info
 
 - **Network:** Sui Testnet
 - **Package ID:** `0x9d24b6fd0f7ecd9d212b209a08f6cd0163f569fbfecae63ddc21e5ce648d30a4`

@@ -3,33 +3,36 @@ import { Transaction } from "@mysten/sui/transactions";
 import { Button, Flex, Text, TextField } from "@radix-ui/themes";
 import { useState } from "react";
 import { PACKAGE_ID, MODULE_NAME, FUNCTIONS, REGISTRY_ID } from "../constants";
+import { useZkLogin } from "../hooks/useZkLogin";
 
 export function CreateProfile() {
   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
+  const { email } = useZkLogin(); 
   const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [createdProfileId, setCreatedProfileId] = useState<string | null>(null);
 
+  // ✅ Safe Copy Function
+  const handleSafeCopy = async (text: string | null) => {
+    if (!text) return alert("No ID found to copy!");
+    
+    try {
+      await navigator.clipboard.writeText(text);
+      alert("✅ Profile ID copied!");
+    } catch (err) {
+      console.error("Copy error:", err);
+      prompt("Could not copy automatically. Please copy from here:", text);
+    }
+  };
+
   const handleCreateProfile = () => {
-    if (!username.trim()) {
-      setError("Username is required!");
-      return;
-    }
-    if (username.length < 3) {
-      setError("Username must be at least 3 characters!");
-      return;
-    }
-    if (username.length > 20) {
-      setError("Username must be at most 20 characters!");
-      return;
-    }
-    // Only allow alphanumeric and underscore (no Turkish or special chars)
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      setError("Username can only contain letters (a-z), numbers (0-9), and underscores (_)!");
-      return;
-    }
+    // Validations
+    if (!username.trim()) { setError("Username is required!"); return; }
+    if (username.length < 3) { setError("Username must be at least 3 characters!"); return; }
+    if (username.length > 20) { setError("Username must be at most 20 characters!"); return; }
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) { setError("Only letters, numbers, and underscores!"); return; }
 
     setIsLoading(true);
     setError(null);
@@ -41,19 +44,21 @@ export function CreateProfile() {
       arguments: [
         tx.object(REGISTRY_ID),
         tx.pure.string(username),
+        // ❌ Email parameter removed (made compatible with contract)
       ],
     });
 
     signAndExecute(
-      {
-        transaction: tx,
-      },
+      { transaction: tx },
       {
         onSuccess: (result) => {
           const createdObjects = (result as any).effects?.created || [];
-          const userProfile = createdObjects.find((obj: any) => 
-            obj.owner === "Shared"
-          );
+          // We try to find the object owned by the user (not shared)
+          // But since CreateProfile shares the object (share_object),
+          // we should find the one with Owner: Shared in createdObjects.
+          // Usually, the first created object is the profile object.
+          // For a more precise solution, use 'reference.objectId'.
+          const userProfile = createdObjects[0]; 
           
           if (userProfile) {
             setCreatedProfileId(userProfile.reference.objectId);
@@ -63,13 +68,13 @@ export function CreateProfile() {
           setIsLoading(false);
         },
         onError: (err) => {
-          const errorMsg = err.message || "";
-          if (errorMsg.includes("MoveAbort") && errorMsg.includes("0)")) {
-            setError(`Username already taken! Try a different one.`);
-          } else if (errorMsg.includes("MoveAbort") && errorMsg.includes("2)")) {
-            setError(`This wallet already has a profile! Each wallet can only create 1 profile.`);
+          const msg = err.message || "";
+          if (msg.includes("MoveAbort")) {
+             if (msg.includes("0)")) setError(`Username '@${username}' is already taken!`);
+             else if (msg.includes("2)")) setError("This wallet already has a profile!");
+             else setError("Transaction failed. Code: " + msg);
           } else {
-            setError(errorMsg || "Failed to create profile");
+             setError(msg || "Failed to create profile");
           }
           setIsLoading(false);
         },
@@ -84,36 +89,39 @@ export function CreateProfile() {
       </Text>
       
       <Text size="2" color="gray">
-        Initial trust score: 100 points
+        Start your reputation journey with 100 points.
       </Text>
+	  
+      {email && (
+        <Flex 
+          direction="column" 
+          gap="1" 
+          style={{ background: "var(--blue-a3)", padding: "10px", borderRadius: "6px" }}
+        >
+          <Text size="2" weight="bold" color="blue">Authenticated as:</Text>
+          <Text size="2" style={{ fontFamily: "monospace" }}>{email}</Text>
+        </Flex>
+      )}
 
       <Flex direction="column" gap="2">
-        <Text size="2" weight="bold">
-          Username:
-        </Text>
+        <Text size="2" weight="bold">Username:</Text>
         <TextField.Root
-          placeholder={`e.g. user_${Math.floor(Math.random() * 10000)}`}
+          placeholder="Enter a username..."
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           disabled={isLoading || success}
         />
-        <Flex justify="between" align="center">
-          <Text size="1" color="gray">
-            3-20 characters, letters, numbers, underscore only
-          </Text>
-          <Button
+        <Button
             size="1"
             variant="ghost"
-            onClick={() => setUsername(`user_${Date.now()}`)}
+            onClick={() => setUsername(`user_${Math.floor(Math.random() * 10000)}`)}
             disabled={isLoading || success}
-            style={{ cursor: "pointer" }}
+            style={{ cursor: "pointer", alignSelf: "flex-end" }}
           >
             🎲 Random
-          </Button>
-        </Flex>
+        </Button>
       </Flex>
 
-      {/* Create Profile Button */}
       <Button
         onClick={handleCreateProfile}
         disabled={isLoading || success || !username.trim()}
@@ -123,7 +131,7 @@ export function CreateProfile() {
         {isLoading ? "Creating..." : success ? "✅ Profile Created!" : "Create Profile"}
       </Button>
 
-      {/* Success message */}
+      {/* ✅ BAŞARI EKRANI - GÜNCELLENDİ */}
       {success && createdProfileId && (
         <Flex 
           direction="column" 
@@ -133,65 +141,45 @@ export function CreateProfile() {
             padding: "15px", 
             borderRadius: "8px", 
             border: "2px solid var(--green-9)",
-            animation: "slideIn 0.4s ease-out",
+            marginTop: "10px"
           }}
         >
           <Text size="3" weight="bold" color="green">
-            ✅ Profile Created Successfully!
+            ✅ Profil Başarıyla Oluşturuldu!
           </Text>
           
           <Text size="2">
-            Your trust score: <strong>100/100</strong>
+            Admin işlemleri için aşağıdaki <strong>Profil ID</strong>'sini kullanmalısın:
           </Text>
           
-          <Flex direction="column" gap="1">
-            <Text size="2" weight="bold">
-              🎯 Your Profile Object ID:
-            </Text>
-            <Text 
-              size="2" 
-              style={{ 
-                wordBreak: "break-all", 
-                fontFamily: "monospace",
-                background: "var(--gray-a3)",
-                padding: "8px",
-                borderRadius: "4px"
-              }}
-            >
+          {/* ID Gösterim Kutusu */}
+          <Flex align="center" gap="2" style={{ background: "rgba(255,255,255,0.5)", padding: "8px", borderRadius: "4px" }}>
+            <Text size="2" style={{ fontFamily: "monospace", wordBreak: "break-all", flex: 1 }}>
               {createdProfileId}
             </Text>
           </Flex>
           
+          {/* ✅ Çalışan Kopyalama Butonu */}
           <Button
-            onClick={() => {
-              navigator.clipboard.writeText(createdProfileId);
-              alert("✅ Object ID copied to clipboard!");
-            }}
+            onClick={() => handleSafeCopy(createdProfileId)}
             variant="solid"
-            style={{ cursor: "pointer" }}
+            color="green"
+            style={{ cursor: "pointer", width: "100%" }}
           >
-            📋 Copy Object ID
+            📋 Profil ID'sini Kopyala
           </Button>
           
-          <Flex direction="column" gap="1" style={{ marginTop: "10px", background: "var(--yellow-a2)", padding: "10px", borderRadius: "4px" }}>
-            <Text size="1" weight="bold">
-              💡 Important!
-            </Text>
-            <Text size="1">
-              Share this Object ID with others! They need it to rate you.
-            </Text>
-          </Flex>
+          <Text size="1" color="gray" style={{ marginTop: "5px" }}>
+            ⚠️ Not: Bu ID, cüzdan adresinden farklıdır. Puanlama ve Admin işlemleri için bunu kullanın.
+          </Text>
         </Flex>
       )}
 
-      {/* Error message */}
       {error && (
-        <Text size="2" color="red">
+        <Text size="2" color="red" style={{ marginTop: "10px" }}>
           ❌ {error}
         </Text>
       )}
-
-
     </Flex>
   );
 }

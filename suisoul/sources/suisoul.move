@@ -1,16 +1,41 @@
 module suisoul::trust_system {
+    // --- Imports ---
     use std::string::String;
     use sui::table::{Self, Table};
-    use sui::transfer;
-    use sui::tx_context::TxContext;
-    use std::vector;
+    use sui::event;
 
+    // --- Error Codes (Constants) ---
+    const EUsernameTaken: u64 = 0;
+    const ECannotRateSelf: u64 = 1;
+    const EWalletAlreadyHasProfile: u64 = 2;
+    // const ENotAdmin: u64 = 3; 
+    const EAlreadyRated: u64 = 4;
+    const EInvalidScore: u64 = 5;
+
+    // --- Events (NEW) ---
+    // Events that the frontend will listen to are defined here.
+    
+    // 1. Fired when a profile is created
+    public struct ProfileCreated has copy, drop {
+        profile_id: ID,
+        user_address: address,
+        username: String,
+    }
+
+    // 2. Fired when a user is rated
+    public struct UserRated has copy, drop {
+        rater: address,
+        target_profile_id: ID,
+        score: u64,
+        new_trust_score: u64,
+    }
+
+    // --- Structs (Data Structures) ---
     public struct UsernameRegistry has key {
         id: UID,
         usernames: Table<String, address>,
         username_list: vector<String>,
-        wallet_profiles: Table<address, address>, // wallet -> profile_id mapping
-        admin_address: address, // İlk profil oluşturan kişi admin olur
+        wallet_profiles: Table<address, address>,
     }
 
     public struct UserProfile has key, store {
@@ -18,6 +43,7 @@ module suisoul::trust_system {
         username: String,
         trust_score: u64,
         owner: address,
+        rated_by: Table<address, bool>,
     }
 
     public struct ReputationCard has key {
@@ -30,87 +56,103 @@ module suisoul::trust_system {
         id: UID 
     }
 
-    public entry fun create_profile(
+    // --- Functions ---
+
+    public fun create_profile(
         registry: &mut UsernameRegistry,
         username: String, 
         ctx: &mut TxContext
     ) {
         let sender = tx_context::sender(ctx);
         
-        // 1 wallet = 1 profil kontrolü
-        assert!(!table::contains(&registry.wallet_profiles, sender), 2); // Error code: 2 = Wallet already has a profile
+        assert!(!table::contains(&registry.wallet_profiles, sender), EWalletAlreadyHasProfile);
+        assert!(!table::contains(&registry.usernames, username), EUsernameTaken);
         
-        // Username benzersizlik kontrolü
-        assert!(!table::contains(&registry.usernames, username), 0); // Error code: 0 = Username already taken
-        
-        // Eğer bu ilk profil ise (admin_address boş ise), bu kişiyi admin yap
-        if (registry.admin_address == @0x0) {
-            registry.admin_address = sender;
-        };
-        
-        let profile_id = object::new(ctx);
-        let profile_address = object::uid_to_address(&profile_id);
+        let profile_uid = object::new(ctx);
+        // Copy ID for event (before UID is moved)
+        let profile_id = object::uid_to_inner(&profile_uid); 
+        let profile_address = object::uid_to_address(&profile_uid);
         
         let profile = UserProfile {
-            id: profile_id,
-            username,
+            id: profile_uid,
+            username: username, // Copies the 'username' variable
             trust_score: 100,
             owner: sender,
+            rated_by: table::new(ctx),
         };
-        
-        // Wallet'ı kaydet
+
         table::add(&mut registry.wallet_profiles, sender, profile_address);
-        
-        // Username'i kaydet
         table::add(&mut registry.usernames, profile.username, profile_address);
         vector::push_back(&mut registry.username_list, profile.username);
         
+        // Obje paylaşılmadan önce veya sonra event fırlatılabilir
         transfer::share_object(profile);
+
+        // YENİ: Event fırlatılıyor
+        event::emit(ProfileCreated {
+            profile_id,
+            user_address: sender,
+            username,
+        });
     }
 
-    public entry fun rate_user(
+    public fun rate_user(
         profile: &mut UserProfile,
         score: u64,
         comment: String,
         ctx: &mut TxContext
     ) {
-        // Kendini puanlamayı engelle
-        assert!(profile.owner != tx_context::sender(ctx), 1); // Error code: 1 = Cannot rate yourself
-        
+        let sender = tx_context::sender(ctx);
+
+        assert!(profile.owner != sender, ECannotRateSelf);
+        assert!(!table::contains(&profile.rated_by, sender), EAlreadyRated);
+        assert!(score >= 1 && score <= 5, EInvalidScore);
+
         if (score == 1) { 
+            if (profile.trust_score > 10) { profile.trust_score = profile.trust_score - 10 } 
+            else { profile.trust_score = 0 };
+        } else if (score == 2) {
             if (profile.trust_score > 5) { profile.trust_score = profile.trust_score - 5 } 
-            else { profile.trust_score = 0 }; 
+            else { profile.trust_score = 0 };
+        } else if (score == 4) {
+            profile.trust_score = profile.trust_score + 5;
+        } else if (score == 5) {
+            profile.trust_score = profile.trust_score + 10;
         };
-        if (score == 5) { 
-            profile.trust_score = profile.trust_score + 3 
-        };
-        
+
         if (profile.trust_score > 100) { 
             profile.trust_score = 100 
         };
+
+        table::add(&mut profile.rated_by, sender, true);
+
+        // YENİ: Event fırlatılıyor (Puanlama işlemi bittiğinde)
+        event::emit(UserRated {
+            rater: sender,
+            target_profile_id: object::uid_to_inner(&profile.id),
+            score,
+            new_trust_score: profile.trust_score
+        });
+
         let card = ReputationCard {
             id: object::new(ctx),
             score_given: score,
             comment
         };
-        
         transfer::transfer(card, profile.owner);
     }
 
-    public entry fun complete_redemption_task(
-        registry: &UsernameRegistry,
+    public fun complete_redemption_task(
         _: &AdminCap,
         profile: &mut UserProfile,
-        ctx: &mut TxContext
+        _ctx: &mut TxContext
     ) {
-        // Sadece admin çağırabilir
-        assert!(tx_context::sender(ctx) == registry.admin_address, 3); // Error code: 3 = Not admin
-        
         profile.trust_score = profile.trust_score + 15;
         if (profile.trust_score > 100) { 
             profile.trust_score = 100 
         };
     }
+
     public fun get_profile_by_username(
         registry: &UsernameRegistry, 
         username: String
@@ -125,18 +167,18 @@ module suisoul::trust_system {
     public fun get_username_count(registry: &UsernameRegistry): u64 {
         vector::length(&registry.username_list)
     }
+
     fun init(ctx: &mut TxContext) {
         transfer::transfer(
             AdminCap { id: object::new(ctx) }, 
             tx_context::sender(ctx)
         );
-        
         transfer::share_object(UsernameRegistry {
             id: object::new(ctx),
             usernames: table::new(ctx),
             username_list: vector::empty(),
             wallet_profiles: table::new(ctx),
-            admin_address: @0x0, // Başlangıçta admin yok, ilk profil oluşturan admin olacak
         });
     }
 }
+//deneme

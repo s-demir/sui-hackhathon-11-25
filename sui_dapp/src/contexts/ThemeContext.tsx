@@ -11,12 +11,12 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
-    const saved = localStorage.getItem("suisoul-theme");
+    const saved = localStorage.getItem("ftsui-theme");
     return (saved as Theme) || "light";
   });
 
   useEffect(() => {
-    localStorage.setItem("suisoul-theme", theme);
+    localStorage.setItem("ftsui-theme", theme);
     document.documentElement.classList.remove("light", "dark");
     document.documentElement.classList.add(theme);
   }, [theme]);

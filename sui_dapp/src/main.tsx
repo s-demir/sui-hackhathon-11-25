@@ -9,24 +9,31 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Theme } from "@radix-ui/themes";
 import App from "./App.tsx";
 import { networkConfig } from "./networkConfig.ts";
-import { ThemeProvider } from "./contexts/ThemeContext";
+import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
 
 const queryClient = new QueryClient();
+
+function MainThemeWrapper() {
+  const { theme } = useTheme();
+  return (
+    <Theme appearance={theme}>
+      <QueryClientProvider client={queryClient}>
+        <SuiClientProvider networks={networkConfig} defaultNetwork="testnet">
+          <WalletProvider autoConnect>
+            <App />
+          </WalletProvider>
+        </SuiClientProvider>
+      </QueryClientProvider>
+    </Theme>
+  );
+}
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
       <ThemeProvider>
-        <Theme appearance="dark">
-          <QueryClientProvider client={queryClient}>
-            <SuiClientProvider networks={networkConfig} defaultNetwork="testnet">
-              <WalletProvider autoConnect>
-                <App />
-              </WalletProvider>
-            </SuiClientProvider>
-          </QueryClientProvider>
-        </Theme>
+        <MainThemeWrapper />
       </ThemeProvider>
     </BrowserRouter>
-  </React.StrictMode>,
+  </React.StrictMode>
 );

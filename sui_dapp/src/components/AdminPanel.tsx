@@ -1,26 +1,34 @@
-// Bu kod şunları yapacak:
-// Cüzdanındaki tüm eşyaları tarayacak.
-// İçinde AdminCap var mı diye bakacak.
-// Varsa paneli gösterecek, yoksa null (hiçbir şey) döndürecek.
-// Butona basınca o AdminCap ID'sini kullanarak işlem yapacak.
-
 import { useCurrentAccount, useSuiClientQuery, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { Button, Card, Flex, Heading, Text, TextField } from "@radix-ui/themes";
 import { useState } from "react";
-import { PACKAGE_ID, MODULE_NAME, STRUCT_TYPES, REGISTRY_ID } from "../constants";
+import { PACKAGE_ID, MODULE_NAME, STRUCT_TYPES } from "../constants";
 
 export function AdminPanel() {
+    const [copied, setCopied] = useState(false);
+
+    // Safe copy function
+    const handleCopyCapId = async () => {
+      try {
+        await navigator.clipboard.writeText(adminCapObj.data?.objectId || "");
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        alert("Kopyalama hatası! Cap ID: " + (adminCapObj.data?.objectId || ""));
+      }
+    };
   const account = useCurrentAccount();
   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
-  
   const [targetProfileId, setTargetProfileId] = useState("");
 
-  // AdminCap kontrolü
+  // 1. Find AdminCap object in wallet
   const { data: ownedObjects, isPending } = useSuiClientQuery(
     "getOwnedObjects",
     {
       owner: account?.address || "",
+      filter: {
+        StructType: STRUCT_TYPES.ADMIN_CAP, // Only get objects of type AdminCap
+      },
       options: { showType: true },
     },
     {
@@ -28,75 +36,116 @@ export function AdminPanel() {
     }
   );
 
-  // Registry'den admin_address kontrolü
-  const { data: registryData, isPending: isRegistryPending } = useSuiClientQuery(
-    "getObject",
-    {
-      id: REGISTRY_ID,
-      options: { showContent: true },
-    },
-    {
-      enabled: !!account,
-    }
-  );
+  // If loading or account is missing, do not show
+  if (!account || isPending || !ownedObjects) return null;
 
-  if (!account || isPending || isRegistryPending || !ownedObjects || !registryData) return null;
+  // Check if AdminCap exists
+  const adminCapObj = ownedObjects.data?.[0]; // Since we filter, we can take the first one
 
-  const adminCapObj = ownedObjects.data.find(
-    (obj) => obj.data?.type === STRUCT_TYPES.ADMIN_CAP
-  );
+  // --- DEBUG ---
+  // If the panel is not visible, you can open these logs to check the console
+  // console.log("Account:", account.address);
+  // console.log("Searched Admin Type:", STRUCT_TYPES.ADMIN_CAP);
+  // console.log("Found Objects:", ownedObjects.data);
+  // --- DEBUG ---
 
-  // Registry'den admin adresi al
-  const registryContent = registryData.data?.content as any;
-  const adminAddress = registryContent?.fields?.admin_address;
-
-  // Eğer AdminCap yoksa VE admin değilse gösterme
-  if (!adminCapObj && account.address !== adminAddress) {
+  // If AdminCap does not exist, DO NOT SHOW the panel (return null)
+  if (!adminCapObj) {
     return null;
   }
 
-  // --- Buradan aşağısı sadece Yöneticiye görünür ---
+  // --- Below this line is only visible to the Administrator ---
 
   const handleApproveTask = () => {
     if (!targetProfileId) return alert("Please enter a Profile ID!");
-    if (!adminCapObj) return alert("AdminCap not found!");
 
     const tx = new Transaction();
-
     tx.moveCall({
       target: `${PACKAGE_ID}::${MODULE_NAME}::complete_redemption_task`,
       arguments: [
-        tx.object(REGISTRY_ID), // Registry object
-        tx.object(adminCapObj.data!.objectId), // AdminCap
-        tx.object(targetProfileId), // Profile
+        tx.object(adminCapObj.data!.objectId), // 1st Argument: AdminCap
+        tx.object(targetProfileId),            // 2nd Argument: UserProfile
       ],
     });
 
     signAndExecute(
       { transaction: tx },
       {
-        onSuccess: () => alert("Task Approved! User earned +15 Points."),
-        onError: (err) => console.error(err),
+        onSuccess: () => {
+            alert("✅ Task Approved! User earned +15 Points.");
+            setTargetProfileId(""); // Clear input
+        },
+        onError: (err) => {
+            console.error(err);
+            alert("❌ Failed to approve task: " + err.message);
+        },
       }
     );
   };
 
   return (
-    <Card style={{ background: "#ffebee", border: "2px solid red", marginTop: "20px" }}>
-      <Heading color="red" size="4">🔒 Admin Panel</Heading>
-      <Text size="2" color="gray" mb="2">
-        Only authorized administrators can see this area.
-      </Text>
+    <Card style={{
+      background: 'linear-gradient(135deg, #18181b 80%, #1e293b 100%)',
+      border: '2px solid #3b82f6',
+      boxShadow: '0 4px 24px rgba(37,99,235,0.09)',
+      marginTop: 24,
+      borderRadius: 14,
+      padding: '32px 28px',
+      maxWidth: 440,
+      color: '#e0e7ef',
+    }}>
+      <Flex direction="row" align="center" gap="2" mb="2">
+        <span style={{ fontSize: 28 }}>👮‍♂️</span>
+        <Heading size="5" style={{ color: '#e0e7ef', fontWeight: 700 }}>Admin Panel</Heading>
+      </Flex>
+      
+      <Flex direction="column" gap="1" mb="4">
+         <Text size="2" style={{ color: '#94a3b8' }}>
+            Welcome, Admin. You have the authority to approve tasks.
+         </Text>
+         <Flex align="center" gap="2">
+           <Text size="1" style={{ color: '#475569', fontFamily: 'monospace' }}>
+              Cap ID: {adminCapObj.data?.objectId.slice(0, 6)}...{adminCapObj.data?.objectId.slice(-4)}
+           </Text>
+           <Button
+             size="1"
+             variant={copied ? "soft" : "solid"}
+             color={copied ? "green" : undefined}
+             onClick={handleCopyCapId}
+             style={{ cursor: "pointer", fontSize: 12 }}
+           >
+             {copied ? "✅ Kopyalandı!" : "📋 Kopyala"}
+           </Button>
+         </Flex>
+      </Flex>
 
-      <Flex direction="column" gap="2" mt="3">
-        <Text weight="bold">Approve Restorative Justice Task</Text>
+      <Flex direction="column" gap="3" mt="3">
+        <Text weight="bold" style={{ color: '#60a5fa', fontSize: 16 }}>Approve Restorative Justice Task</Text>
         <TextField.Root 
-            placeholder="User's Profile ID (0x...)" 
-            value={targetProfileId}
-            onChange={(e) => setTargetProfileId(e.target.value)}
+          placeholder="Paste User Profile Object ID..." 
+          value={targetProfileId}
+          onChange={(e) => setTargetProfileId(e.target.value)}
+          style={{
+            background: '#1e293b',
+            border: '1.5px solid #334155',
+            color: '#e0e7ef',
+            borderRadius: 8,
+            fontSize: 15,
+            padding: '10px 12px',
+            marginBottom: 8,
+          }}
         />
-        
-        <Button color="red" onClick={handleApproveTask}>
+        <Button
+          style={{
+            background: 'linear-gradient(90deg, #3b82f6 70%, #60a5fa 100%)',
+            color: '#fff',
+            fontWeight: 600,
+            fontSize: 15,
+            cursor: 'pointer',
+            padding: '12px 0',
+          }}
+          onClick={handleApproveTask}
+        >
           ✅ Approve Task (+15 Points)
         </Button>
       </Flex>

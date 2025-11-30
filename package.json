@@ -1,0 +1,11 @@
+{
+  "name": "sui-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"cd sui_dapp && npm run dev\" \"cd oauth-server && npm start\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
