@@ -5,6 +5,18 @@ import { useState } from "react";
 import { PACKAGE_ID, MODULE_NAME, STRUCT_TYPES } from "../constants";
 
 export function AdminPanel() {
+    const [copied, setCopied] = useState(false);
+
+    // Güvenli kopyalama fonksiyonu
+    const handleCopyCapId = async () => {
+      try {
+        await navigator.clipboard.writeText(adminCapObj.data?.objectId || "");
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        alert("Kopyalama hatası! Cap ID: " + (adminCapObj.data?.objectId || ""));
+      }
+    };
   const account = useCurrentAccount();
   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
   const [targetProfileId, setTargetProfileId] = useState("");
@@ -91,9 +103,20 @@ export function AdminPanel() {
          <Text size="2" style={{ color: '#94a3b8' }}>
             Welcome, Admin. You have the authority to approve tasks.
          </Text>
-         <Text size="1" style={{ color: '#475569', fontFamily: 'monospace' }}>
-            Cap ID: {adminCapObj.data?.objectId.slice(0, 6)}...{adminCapObj.data?.objectId.slice(-4)}
-         </Text>
+         <Flex align="center" gap="2">
+           <Text size="1" style={{ color: '#475569', fontFamily: 'monospace' }}>
+              Cap ID: {adminCapObj.data?.objectId.slice(0, 6)}...{adminCapObj.data?.objectId.slice(-4)}
+           </Text>
+           <Button
+             size="1"
+             variant={copied ? "soft" : "solid"}
+             color={copied ? "green" : undefined}
+             onClick={handleCopyCapId}
+             style={{ cursor: "pointer", fontSize: 12 }}
+           >
+             {copied ? "✅ Kopyalandı!" : "📋 Kopyala"}
+           </Button>
+         </Flex>
       </Flex>
 
       <Flex direction="column" gap="3" mt="3">
