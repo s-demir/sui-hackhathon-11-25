@@ -43,7 +43,7 @@ export function CreateProfile() {
       arguments: [
         tx.object(REGISTRY_ID),
         tx.pure.string(username),
-        tx.pure.string(email || ""), // Pass email from zkLogin, or empty string for wallet users
+        //tx.pure.string(email || ""), // Pass email from zkLogin, or empty string for wallet users
       ],
     });
 
@@ -67,12 +67,15 @@ export function CreateProfile() {
         },
         onError: (err) => {
           const errorMsg = err.message || "";
-          if (errorMsg.includes("MoveAbort") && errorMsg.includes("0)")) {
-            setError(`Username already taken! Try a different one.`);
-          } else if (errorMsg.includes("MoveAbort") && errorMsg.includes("2)")) {
-            setError(`This wallet already has a profile! Each wallet can only create 1 profile.`);
-          } else if (errorMsg.includes("MoveAbort") && errorMsg.includes("4)")) {
-            setError(`This email already has a profile! Each email can only create 1 profile.`);
+          // Move hata kodları: 0=UsernameTaken, 2=WalletHasProfile
+         if (errorMsg.includes("MoveAbort")) {
+            if (errorMsg.includes("0)")) {
+                setError(`❌ Username '${username}' is already taken!`);
+            } else if (errorMsg.includes("2)")) {
+                setError(`❌ This wallet already has a profile!`);
+            } else {
+                setError("❌ Failed to create profile on-chain.");
+            }
           } else {
             setError(errorMsg || "Failed to create profile");
           }

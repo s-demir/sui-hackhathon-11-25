@@ -126,16 +126,17 @@ export function RateUser() {
           setScore(5);
         },
         // On error
-        onError: (err) => {
+       onError: (err) => {
           console.error("❌ Error:", err);
-          
-          // Self-rating error check
-          if (err.message && err.message.includes("MoveAbort") && err.message.includes("1")) {
-            setError("❌ You cannot rate yourself! Use another user's Object ID.");
+          const msg = err.message || "";
+          if (msg.includes("MoveAbort")) {
+            if (msg.includes("1)")) setError("❌ You cannot rate yourself!");
+            else if (msg.includes("4)")) setError("⚠️ You have already rated this user!");
+            else if (msg.includes("5)")) setError("❌ Invalid score (1-5 only)!");
+            else setError("❌ Transaction failed.");
           } else {
-            setError(err.message || "Rating failed");
+            setError(msg || "Rating failed");
           }
-          
           setIsLoading(false);
         },
       }

@@ -1,25 +1,21 @@
 /**
  * Smart Contract Configuration
- * 
- * Bu dosya deploy edilmiş smart contract'ın bilgilerini içerir.
- * Contract yeniden deploy edilirse sadece bu dosyayı güncellemeniz yeterli.
  */
 
-// Package ID - Smart contract'ın blockchain'deki adresi
-export const PACKAGE_ID = "0xd505c23e1bea4a68c66298d0c3ef139d35dd1412ed4081ed0a22ccf755fd570b";
+// YENİ: Deploy ettiğimiz Paket ID'si
+export const PACKAGE_ID = "0x797d351f04fd3d3374ded71ecdff12e80f53970b83c62eeb47251bbd346bff2c";
 
-// Module ismi - Move dosyasındaki "module ftsui::trust_system"
+// Module ismi
 export const MODULE_NAME = "trust_system";
 
-// AdminCap Object ID - Sadece admin işlemleri için (af görevi onaylama)
-export const ADMIN_CAP_ID = "0x7b002ec0c6b6ee8b53f4ecc5200a1eaaa75355d060fe14de34fb76d1493fbc9c";
+// YENİ: Senin cüzdanına gelen AdminCap objesi (Admin Paneli İçin)
+export const ADMIN_CAP_ID = "0x2906c51162aafe267b8555e80bf70fdae0c833c7e50c07f0d6144bf1655985a6";
 
-// UsernameRegistry Object ID - Username -> Object ID mapping için
-export const REGISTRY_ID = "0xdfe67788a0ac71ed89cc1e9993d4feaddd33903a5cba2e4e7bffc10b95751794";
+// YENİ: Paylaşılan veritabanı (UsernameRegistry)
+export const REGISTRY_ID = "0x48c583f21e874bea2ff8b33777902f2eddc75306e1fd40afc7b2d7895569c73c";
 
 /**
  * Fonksiyon İsimleri
- * Smart contract'taki fonksiyonların isimleri
  */
 export const FUNCTIONS = {
   CREATE_PROFILE: "create_profile",
@@ -30,8 +26,7 @@ export const FUNCTIONS = {
 } as const;
 
 /**
- * Struct İsimleri (Object Type'lar)
- * Bu isimler blockchain'den veri çekerken filtreleme için kullanılır
+ * Struct İsimleri
  */
 export const STRUCT_TYPES = {
   USER_PROFILE: `${PACKAGE_ID}::${MODULE_NAME}::UserProfile`,

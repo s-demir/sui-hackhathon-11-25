@@ -87,7 +87,6 @@ export function AdminPanel() {
     tx.moveCall({
       target: `${PACKAGE_ID}::${MODULE_NAME}::complete_redemption_task`,
       arguments: [
-        tx.object(REGISTRY_ID), // Registry object
         tx.object(adminCapObj.data!.objectId), // AdminCap
         tx.object(targetProfileId), // Profile
       ],
