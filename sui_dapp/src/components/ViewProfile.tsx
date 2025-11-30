@@ -12,14 +12,15 @@ export function ViewProfile() {
   const [searchError, setSearchError] = useState<string | null>(null);
   const [showCards, setShowCards] = useState(false);
   const [ownerAddress, setOwnerAddress] = useState("");
+  const [copied, setCopied] = useState(false);
 
   // ✅ Güvenli Kopyalama Fonksiyonu
   const handleSafeCopy = async (text: string) => {
     if (!text) return alert("Kopyalanacak ID bulunamadı!");
-    
     try {
       await navigator.clipboard.writeText(text);
-      alert("✅ ID Kopyalandı!");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error("Kopyalama hatası:", err);
       prompt("Otomatik kopyalanamadı. Lütfen buradan kopyalayın:", text);
@@ -233,11 +234,12 @@ export function ViewProfile() {
               </Text>
               <Button 
                 size="1" 
-                variant="solid" 
-                onClick={() => handleSafeCopy(searchId)}
+                variant={copied ? "soft" : "solid"}
+                color={copied ? "green" : undefined}
+                onClick={async () => await handleSafeCopy(searchId)}
                 style={{ cursor: "pointer" }}
               >
-                📋 Copy
+                {copied ? "✅ Copied!" : "📋 Copy"}
               </Button>
             </Flex>
           </Flex>
